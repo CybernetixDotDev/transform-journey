@@ -1,9 +1,12 @@
+import { useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { usePlayerStore } from '../src/state/usePlayerStore';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -11,6 +14,29 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+
+  const hydrated = usePlayerStore((state) => state.hydrated);
+  const hydrate = usePlayerStore((state) => state.hydrate);
+
+  useEffect(() => {
+    void hydrate();
+  }, [hydrate]);
+
+  // Block rendering until store is hydrated
+  if (!hydrated) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
+        }}
+      >
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
