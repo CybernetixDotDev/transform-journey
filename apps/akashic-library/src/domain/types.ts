@@ -39,5 +39,8 @@ export type BossDefinition = {
   name: string;
   title: string;
   description: string;
-  baseStats: StatBlock;
+
+  // V1 bosses are threshold gates (not full stat mirrors)
+  requiredStats: Partial<StatBlock>;
+  rewardXP: number;
 };
