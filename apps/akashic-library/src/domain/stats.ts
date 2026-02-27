@@ -1,4 +1,4 @@
-import type { StatDefinition } from './types';
+import type { StatDefinition, StatBlock } from './types';
 
 export const STATS: readonly StatDefinition[] = [
   {
@@ -27,3 +27,11 @@ export const STATS: readonly StatDefinition[] = [
     description: 'Connection to arcane and library currents.',
   },
 ];
+
+export const DEFAULT_STATS: StatBlock = {
+  might: 0,
+  insight: 0,
+  will: 0,
+  agility: 0,
+  attunement: 0,
+};

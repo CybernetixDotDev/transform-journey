@@ -44,3 +44,32 @@ export type BossDefinition = {
   requiredStats: Partial<StatBlock>;
   rewardXP: number;
 };
+
+export type RitualLogEntry = {
+  id: string; // simple unique id (we can use Date.now().toString() in V1)
+  roomId: RoomId;
+  bossId?: BossId; // optional: link ritual to boss attempt/defeat later
+  completedAt: string; // ISO timestamp
+};
+
+export type PlayerState = {
+  version: 1;
+
+  // timestamps as ISO strings = easy to store + debug
+  createdAt: string;
+  updatedAt: string;
+
+  // null until Soul Scan assigns it
+  archetypeId: ArchetypeId | null;
+
+  // core progression
+  stats: StatBlock;
+  ascensionPoints: number;
+
+  // world progression
+  unlockedRooms: RoomId[];
+  defeatedBosses: BossId[];
+
+  // activity history (V1 minimal)
+  ritualHistory: RitualLogEntry[];
+};
