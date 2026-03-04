@@ -1,98 +1,153 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useMemo } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { usePlayerStore } from '../../src/state/usePlayerStore';
+import type { StatId } from '../../src/domain/types';
+import { BOSSES } from '../../src/domain/bosses';
+import { DEFAULT_STATS } from '../../src/domain/stats';
+
+const statOrder: StatId[] = ['might', 'insight', 'will', 'agility', 'attunement'];
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const router = useRouter();
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const player = usePlayerStore((s) => s.player);
+
+  const setArchetype = usePlayerStore((s) => s.setArchetype);
+  const updateStat = usePlayerStore((s) => s.updateStat);
+  const addAscensionPoints = usePlayerStore((s) => s.addAscensionPoints);
+  const completeRitual = usePlayerStore((s) => s.completeRitual);
+  const defeatBoss = usePlayerStore((s) => s.defeatBoss);
+  const reset = usePlayerStore((s) => s.reset);
+
+  const lastRitual = useMemo(
+    () => player.ritualHistory[player.ritualHistory.length - 1],
+    [player.ritualHistory]
+  );
+
+  // ---- Onboarding gate ----
+  if (!player.archetypeId) {
+    return (
+      <ScrollView contentContainerStyle={{ padding: 18, gap: 14 }}>
+        <Text style={{ fontSize: 26, fontWeight: '700' }}>Akashic Library</Text>
+
+        <View style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 10 }}>
+          <Text style={{ fontSize: 16, fontWeight: '600' }}>Welcome</Text>
+          <Text style={{ opacity: 0.75 }}>
+            Begin the Soul Scan to receive your archetype and unlock your first room.
+          </Text>
+
+          <ActionButton
+            label="Begin Soul Scan"
+            onPress={() => router.push('/soul-scan')}
+          />
+
+          <Text style={{ opacity: 0.6, fontSize: 12 }}>
+            This experience is reflective and symbolic — not therapeutic.
+          </Text>
+        </View>
+
+        <View style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 10 }}>
+          <Text style={{ fontSize: 16, fontWeight: '600' }}>Dev Controls</Text>
+          <Text style={{ opacity: 0.75 }}>
+            If you want to re-run onboarding or clear progress:
+          </Text>
+          <ActionButton label="Reset ALL state" onPress={() => void reset()} />
+        </View>
+      </ScrollView>
+    );
+  }
+
+  // ---- Main V1 Control Room ----
+  return (
+    <ScrollView contentContainerStyle={{ padding: 18, gap: 14 }}>
+      <Text style={{ fontSize: 26, fontWeight: '700' }}>Akashic Library</Text>
+
+      <View style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 6 }}>
+        <Text style={{ fontSize: 16, fontWeight: '600' }}>Player</Text>
+        <Text>Archetype: {player.archetypeId}</Text>
+        <Text>Ascension Points: {player.ascensionPoints}</Text>
+        <Text>Unlocked Rooms: {player.unlockedRooms.length}</Text>
+        <Text>Defeated Bosses: {player.defeatedBosses.length}</Text>
+        <Text>Rituals Completed: {player.ritualHistory.length}</Text>
+        <Text style={{ opacity: 0.7, fontSize: 12 }}>Updated: {player.updatedAt}</Text>
+      </View>
+
+      <View style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 8 }}>
+        <Text style={{ fontSize: 16, fontWeight: '600' }}>Stats</Text>
+
+        {statOrder.map((id) => (
+          <View key={id} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text>{id}</Text>
+            <Text>{player.stats[id]}</Text>
+          </View>
+        ))}
+
+        <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>
+          {statOrder.map((id) => (
+            <ActionButton key={id} label={`+1 ${id}`} onPress={() => updateStat(id, 1)} />
+          ))}
+        </View>
+
+        <ActionButton
+          label="Reset stats to 0"
+          onPress={() =>
+            setArchetype(player.archetypeId ?? 'scribe', { ...DEFAULT_STATS })
+          }
+        />
+      </View>
+
+      <View style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 10 }}>
+        <Text style={{ fontSize: 16, fontWeight: '600' }}>Actions (V1 Debug)</Text>
+
+        <ActionButton label="+10 Ascension Points" onPress={() => addAscensionPoints(10)} />
+
+        <ActionButton
+          label="Complete ritual (echo-hall)"
+          onPress={() => completeRitual({ roomId: 'echo-hall' })}
+        />
+
+        <ActionButton
+          label="Defeat boss #1 (reward XP)"
+          onPress={() => {
+            const boss = BOSSES[0];
+            defeatBoss(boss.id, boss.rewardXP);
+          }}
+        />
+
+        <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
+          <ActionButton
+            label="Re-run Soul Scan"
+            onPress={() => router.push('/soul-scan')}
+          />
+          <ActionButton label="Reset ALL state" onPress={() => void reset()} />
+        </View>
+      </View>
+
+      <View style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 6 }}>
+        <Text style={{ fontSize: 16, fontWeight: '600' }}>Last Ritual</Text>
+        <Text>
+          {lastRitual ? `${lastRitual.roomId} @ ${lastRitual.completedAt}` : '—'}
+        </Text>
+      </View>
+    </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+function ActionButton({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={{
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        borderRadius: 10,
+        borderWidth: 1,
+        alignSelf: 'flex-start',
+      }}
+    >
+      <Text style={{ fontWeight: '600' }}>{label}</Text>
+    </Pressable>
+  );
+}

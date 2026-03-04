@@ -1,4 +1,4 @@
-import type { RoomDefinition } from './types';
+import type { RoomId, RoomDefinition } from './types';
 
 export const ROOMS: readonly RoomDefinition[] = [
   {
@@ -19,4 +19,10 @@ export const ROOMS: readonly RoomDefinition[] = [
     description: 'A sealed nexus storing records of distant futures.',
     bossId: 'vault-oracle',
   },
+];
+
+export const ROOM_ORDER: readonly RoomId[] = [
+  'echo-hall',
+  'mirror-archive',
+  'astral-vault',
 ];

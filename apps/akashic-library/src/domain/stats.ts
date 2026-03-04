@@ -3,28 +3,28 @@ import type { StatDefinition, StatBlock } from './types';
 export const STATS: readonly StatDefinition[] = [
   {
     id: 'might',
-    name: 'Might',
-    description: 'Physical force and melee impact.',
+    name: 'Courage',
+    description: 'Your capacity to act despite fear and uncertainty.',
   },
   {
     id: 'insight',
-    name: 'Insight',
-    description: 'Pattern reading and tactical awareness.',
+    name: 'Clarity',
+    description: 'Pattern recognition and clean decision-making.',
   },
   {
     id: 'will',
-    name: 'Will',
-    description: 'Mental resilience and resolve.',
+    name: 'Discipline',
+    description: 'Consistency, resolve, and follow-through.',
   },
   {
     id: 'agility',
-    name: 'Agility',
-    description: 'Speed, reflexes, and movement control.',
+    name: 'Adaptability',
+    description: 'Flexibility, speed, and recovery when things change.',
   },
   {
     id: 'attunement',
-    name: 'Attunement',
-    description: 'Connection to arcane and library currents.',
+    name: 'Compassion',
+    description: 'Sensitivity, empathy, and connection to meaning.',
   },
 ];
 
