@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import { DEFAULT_STATS } from '../domain/stats';
+
 import type {
   ArchetypeId,
   BossId,
@@ -10,6 +11,7 @@ import type {
   StatBlock,
   StatId,
 } from '../domain/types';
+import { completeRitual as resolveRitual } from '../engine/RitualEngine';
 import {
   clearPlayerState,
   loadPlayerState,
@@ -18,6 +20,7 @@ import {
 
 type CompleteRitualInput = Omit<RitualLogEntry, 'id' | 'completedAt'> & {
   bossId?: BossId;
+  effects?: Partial<StatBlock>;
 };
 
 type PlayerStore = {
@@ -52,8 +55,6 @@ const safePositive = (value: number): number => {
   return Math.max(0, value);
 };
 
-const buildRitualId = (): string =>
-  `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 const logPersistError = (err: unknown): void => {
   if (__DEV__) {
@@ -169,19 +170,11 @@ export const usePlayerStore = create<PlayerStore>((set) => {
       });
     },
 
-    completeRitual: (entry) => {
-      persistMutation((player) => ({
-        ...player,
-        ritualHistory: [
-          ...player.ritualHistory,
-          {
-            ...entry,
-            id: buildRitualId(),
-            completedAt: new Date().toISOString(),
-          },
-        ],
-      }));
-    },
+  completeRitual: (entry) => {
+  persistMutation((player) =>
+    resolveRitual(player, entry.roomId, entry.effects ?? {}, entry.bossId)
+  );
+},
 
     updateStat: (statId, delta) => {
       const safeDelta = Number.isFinite(delta) ? delta : 0;

@@ -13,7 +13,6 @@ export default function RoomScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
 
   const player = usePlayerStore((s) => s.player);
-  const completeRitual = usePlayerStore((s) => s.completeRitual);
   const defeatBoss = usePlayerStore((s) => s.defeatBoss);
   const unlockRoom = usePlayerStore((s) => s.unlockRoom);
 
@@ -118,18 +117,23 @@ export default function RoomScreen() {
 
         <Pressable
           disabled={!unlocked}
-          onPress={() => completeRitual({ roomId })}
+          onPress={() =>
+          router.push({
+          pathname: '/rituals/[id]',
+          params: { id: roomId },
+           })
+}
           style={{
-            paddingVertical: 12,
-            paddingHorizontal: 14,
-            borderRadius: 12,
-            borderWidth: 1,
-            opacity: unlocked ? 1 : 0.4,
-            alignItems: 'center',
-          }}
-        >
-          <Text style={{ fontWeight: '700' }}>Complete Ritual</Text>
-        </Pressable>
+          paddingVertical: 12,
+          paddingHorizontal: 14,
+          borderRadius: 12,
+          borderWidth: 1,
+          opacity: unlocked ? 1 : 0.4,
+          alignItems: 'center',
+        }}
+>
+  <Text style={{ fontWeight: '700' }}>Begin Ritual</Text>
+</Pressable>
 
         <Pressable
           disabled={!unlocked || !boss || bossDefeated || !bossCheck.ok}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -12,22 +12,22 @@ export default function SoulScanScreen() {
   const unlockRoom = usePlayerStore((s) => s.unlockRoom);
   const archetypeId = usePlayerStore((s) => s.player.archetypeId);
 
-  const [answers, setAnswers] = useState<Record<string, string>>({}); // questionId -> optionId
+  const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  if (archetypeId) {
-    router.replace('/(tabs)');
-    return null;
-}
+  useEffect(() => {
+    if (archetypeId) {
+      router.replace('/(tabs)');
+    }
+  }, [archetypeId, router]);
 
   const answeredCount = Object.keys(answers).length;
   const total = SOUL_SCAN_QUESTIONS.length;
   const canSubmit = answeredCount === total;
 
-const selectedOptionIds = useMemo(
-  () => SOUL_SCAN_QUESTIONS.map((q) => answers[q.id]).filter(Boolean),
-  [answers]
-);
-  
+  const selectedOptionIds = useMemo(
+    () => SOUL_SCAN_QUESTIONS.map((q) => answers[q.id]).filter(Boolean),
+    [answers]
+  );
 
   const onSelect = (questionId: string, optionId: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: optionId }));

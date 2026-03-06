@@ -73,3 +73,21 @@ export type PlayerState = {
   // activity history (V1 minimal)
   ritualHistory: RitualLogEntry[];
 };
+
+export type RitualEffect = Partial<StatBlock>;
+
+export type RitualChoice = {
+  id: string;
+  label: string;
+  description: string;
+  effects: RitualEffect;
+};
+
+export type RitualDefinition = {
+  id: string;
+  roomId: RoomId;
+  name: string;
+  description: string;
+  choices: RitualChoice[];
+  repeatable?: boolean;
+};

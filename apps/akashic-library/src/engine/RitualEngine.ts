@@ -1,4 +1,12 @@
-import type { BossId, PlayerState, RoomId, RitualLogEntry } from '../domain/types';
+import type {
+   BossId,
+   PlayerState,
+   RoomId,
+   RitualLogEntry,
+   RitualEffect, 
+   StatBlock
+   } from '../domain/types';
+
 
 export function hasCompletedRitualForRoom(
   player: PlayerState,
@@ -34,4 +42,47 @@ export function hasCompletedRitualForBoss(
   bossId: BossId
 ): boolean {
   return player.ritualHistory.some((r) => r.bossId === bossId);
+}
+
+function clampStat(value: number): number {
+  return Math.max(0, Math.min(10, value));
+}
+
+export function applyRitualEffects(
+  stats: StatBlock,
+  effects: RitualEffect
+): StatBlock {
+  const next: StatBlock = { ...stats };
+
+  for (const [statId, delta] of Object.entries(effects)) {
+    const key = statId as keyof StatBlock;
+    next[key] = clampStat(next[key] + (delta ?? 0));
+  }
+
+  return next;
+}
+
+export function completeRitual(
+  player: PlayerState,
+  roomId: RoomId,
+  effects: RitualEffect,
+  bossId?: BossId,
+  now: Date = new Date()
+): PlayerState {
+  const completedAt = now.toISOString();
+
+  return {
+    ...player,
+    stats: applyRitualEffects(player.stats, effects),
+    updatedAt: completedAt,
+    ritualHistory: [
+      ...player.ritualHistory,
+      {
+        id: completedAt,
+        roomId,
+        bossId,
+        completedAt,
+      },
+    ],
+  };
 }
