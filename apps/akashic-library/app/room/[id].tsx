@@ -6,15 +6,13 @@ import type { RoomId } from '../../src/domain/types';
 import { ROOMS } from '../../src/domain/rooms';
 import { BOSSES } from '../../src/domain/bosses';
 import { usePlayerStore } from '../../src/state/usePlayerStore';
-import { canChallengeBoss, getNextRoomToUnlock } from '../../src/engine/BossEngine';
+import { canChallengeBoss } from '../../src/engine/BossEngine';
 
 export default function RoomScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
 
   const player = usePlayerStore((s) => s.player);
-  const defeatBoss = usePlayerStore((s) => s.defeatBoss);
-  const unlockRoom = usePlayerStore((s) => s.unlockRoom);
 
   const roomId = params.id as RoomId | undefined;
 
@@ -136,30 +134,28 @@ export default function RoomScreen() {
 </Pressable>
 
         <Pressable
-          disabled={!unlocked || !boss || bossDefeated || !bossCheck.ok}
-          onPress={() => {
-            if (!boss) return;
+  disabled={!unlocked || !boss || bossDefeated || !bossCheck.ok}
+  onPress={() => {
+    if (!boss) return;
 
-            defeatBoss(boss.id, boss.rewardXP);
-
-            const nextRoom = getNextRoomToUnlock(roomId);
-            if (nextRoom) {
-              unlockRoom(nextRoom);
-            }
-          }}
-          style={{
-            paddingVertical: 12,
-            paddingHorizontal: 14,
-            borderRadius: 12,
-            borderWidth: 1,
-            opacity: !unlocked || !boss || bossDefeated || !bossCheck.ok ? 0.4 : 1,
-            alignItems: 'center',
-          }}
-        >
-          <Text style={{ fontWeight: '700' }}>
-            {bossDefeated ? 'Boss Defeated' : bossCheck.ok ? 'Challenge Boss' : 'Boss Locked'}
-          </Text>
-        </Pressable>
+    router.push({
+      pathname: '/bosses/[id]',
+      params: { id: boss.id },
+    });
+  }}
+  style={{
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    opacity: !unlocked || !boss || bossDefeated || !bossCheck.ok ? 0.4 : 1,
+    alignItems: 'center',
+  }}
+>
+  <Text style={{ fontWeight: '700' }}>
+    {bossDefeated ? 'Boss Defeated' : bossCheck.ok ? 'Challenge Boss' : 'Boss Locked'}
+  </Text>
+</Pressable>
 
         {boss && !bossDefeated && bossCheck.reasons.length > 0 && (
           <View style={{ gap: 6 }}>
