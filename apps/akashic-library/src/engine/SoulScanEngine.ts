@@ -144,7 +144,7 @@ const clampStat = (value: number): number => Math.max(0, Math.min(10, value));
 export type SoulScanResult = {
   archetypeId: ArchetypeId;
   startingStats: StatBlock;
-  firstRoomId: 'echo-hall'; // V1 fixed first room
+  firstRoomId: 'hall_of_echoes'; // V1 fixed first room
 };
 
 export function runSoulScan(answerOptionIds: string[]): SoulScanResult {
@@ -183,6 +183,6 @@ export function runSoulScan(answerOptionIds: string[]): SoulScanResult {
   return {
     archetypeId: best,
     startingStats: stats,
-    firstRoomId: 'echo-hall',
+    firstRoomId: 'hall_of_echoes',
   };
 }

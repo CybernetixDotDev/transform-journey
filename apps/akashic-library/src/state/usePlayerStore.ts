@@ -23,9 +23,17 @@ type CompleteRitualInput = Omit<RitualLogEntry, 'id' | 'completedAt'> & {
   effects?: Partial<StatBlock>;
 };
 
+type RitualResult = {
+  roomId: RoomId;
+  effects: Partial<StatBlock>;
+  before: StatBlock;
+  after: StatBlock;
+};
+
 type PlayerStore = {
   hydrated: boolean;
   player: PlayerState;
+  lastRitualResult: RitualResult | null;
 
   hydrate: () => Promise<void>;
   reset: () => Promise<void>;
@@ -37,6 +45,9 @@ type PlayerStore = {
   defeatBoss: (bossId: BossId, rewardXP?: number) => void;
 
   completeRitual: (entry: CompleteRitualInput) => void;
+  setLastRitualResult: (result: RitualResult) => void;
+  clearLastRitualResult: () => void;
+
   updateStat: (statId: StatId, delta: number) => void;
 };
 
@@ -50,11 +61,18 @@ const normalizeStatBlock = (stats: StatBlock): StatBlock => ({
   attunement: clampStat(stats.attunement),
 });
 
+const copyStatBlock = (stats: StatBlock): StatBlock => ({
+  might: stats.might,
+  insight: stats.insight,
+  will: stats.will,
+  agility: stats.agility,
+  attunement: stats.attunement,
+});
+
 const safePositive = (value: number): number => {
   if (!Number.isFinite(value)) return 0;
   return Math.max(0, value);
 };
-
 
 const logPersistError = (err: unknown): void => {
   if (__DEV__) {
@@ -79,7 +97,7 @@ export const createDefaultPlayerState = (): PlayerState => {
   };
 };
 
-export const usePlayerStore = create<PlayerStore>((set) => {
+export const usePlayerStore = create<PlayerStore>((set, get) => {
   const persistMutation = (update: (player: PlayerState) => PlayerState): void => {
     let nextPlayer: PlayerState | null = null;
 
@@ -102,6 +120,7 @@ export const usePlayerStore = create<PlayerStore>((set) => {
   return {
     hydrated: false,
     player: createDefaultPlayerState(),
+    lastRitualResult: null,
 
     hydrate: async () => {
       const loaded = await loadPlayerState();
@@ -111,7 +130,6 @@ export const usePlayerStore = create<PlayerStore>((set) => {
 
       set({ hydrated: true, player });
 
-      // Persist if missing OR invalid/outdated
       if (!loaded || !isValidV1) {
         await savePlayerState(player).catch(logPersistError);
       }
@@ -123,7 +141,7 @@ export const usePlayerStore = create<PlayerStore>((set) => {
       await clearPlayerState().catch(logPersistError);
       await savePlayerState(player).catch(logPersistError);
 
-      set({ hydrated: true, player });
+      set({ hydrated: true, player, lastRitualResult: null });
     },
 
     setArchetype: (archetypeId, startingStats) => {
@@ -170,11 +188,32 @@ export const usePlayerStore = create<PlayerStore>((set) => {
       });
     },
 
-  completeRitual: (entry) => {
-  persistMutation((player) =>
-    resolveRitual(player, entry.roomId, entry.effects ?? {}, entry.bossId)
-  );
-},
+    completeRitual: (entry) => {
+      const before = copyStatBlock(get().player.stats);
+
+      persistMutation((player) =>
+        resolveRitual(player, entry.roomId, entry.effects ?? {}, entry.bossId)
+      );
+
+      const after = copyStatBlock(get().player.stats);
+
+      set({
+        lastRitualResult: {
+          roomId: entry.roomId,
+          effects: entry.effects ?? {},
+          before,
+          after,
+        },
+      });
+    },
+
+    setLastRitualResult: (result) => {
+      set({ lastRitualResult: result });
+    },
+
+    clearLastRitualResult: () => {
+      set({ lastRitualResult: null });
+    },
 
     updateStat: (statId, delta) => {
       const safeDelta = Number.isFinite(delta) ? delta : 0;

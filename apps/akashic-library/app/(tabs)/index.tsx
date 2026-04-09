@@ -104,8 +104,8 @@ export default function HomeScreen() {
         <ActionButton label="+10 Ascension Points" onPress={() => addAscensionPoints(10)} />
 
         <ActionButton
-          label="Complete ritual (echo-hall)"
-          onPress={() => completeRitual({ roomId: 'echo-hall' })}
+          label="Complete ritual (hall_of_echoes)"
+          onPress={() => completeRitual({ roomId: 'hall_of_echoes' })}
         />
 
         <ActionButton

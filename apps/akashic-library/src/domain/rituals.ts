@@ -2,8 +2,8 @@ import type { RitualDefinition } from './types';
 
 export const RITUALS: readonly RitualDefinition[] = [
   {
-    id: 'echo-hall-reflection',
-    roomId: 'echo-hall',
+    id: 'hall_of_echoes-reflection',
+    roomId: 'hall_of_echoes',
     name: 'Ritual of Reflection',
     description:
       'The echoes of the hall respond only to those who listen carefully. Choose how you approach the silence.',

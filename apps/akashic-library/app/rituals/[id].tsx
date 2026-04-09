@@ -55,20 +55,10 @@ export default function RitualScreen() {
       effects: selectedChoice.effects,
     });
 
-    Alert.alert(
-      'Ritual Complete',
-      `${selectedChoice.label} has altered your path.`,
-      [
-        {
-          text: 'Return to Room',
-          onPress: () =>
-            router.replace({
-            pathname: '/room/[id]',
-            params: { id: roomId },
-            }),
-        },
-      ]
-    );
+    router.replace({
+      pathname: '/ritual-result',
+      params: { roomId },
+    });
   };
 
   return (

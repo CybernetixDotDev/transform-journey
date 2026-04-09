@@ -7,9 +7,15 @@ export type StatId =
 
 export type ArchetypeId = 'scribe' | 'warden' | 'seer';
 
-export type RoomId = 'echo-hall' | 'mirror-archive' | 'astral-vault';
+export type RoomId =
+  | 'hall_of_echoes'
+  | 'shadow_mirror_hall'
+  | 'scarcity_vault';
 
-export type BossId = 'librarian-sentinel' | 'mirror-keeper' | 'vault-oracle';
+export type BossId =
+  | 'critic'
+  | 'ghost'
+  | 'scarcity_beast';
 
 export type StatBlock = Record<StatId, number>;
 

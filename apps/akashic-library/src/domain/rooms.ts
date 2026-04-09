@@ -2,27 +2,27 @@ import type { RoomId, RoomDefinition } from './types';
 
 export const ROOMS: readonly RoomDefinition[] = [
   {
-    id: 'echo-hall',
-    name: 'Echo Hall',
+    id: 'hall_of_echoes',
+    name: 'Hall of Echoes',
     description: 'A chamber where old catalog chants still reverberate.',
-    bossId: 'librarian-sentinel',
+    bossId: 'critic',
   },
   {
-    id: 'mirror-archive',
-    name: 'Mirror Archive',
+    id: 'shadow_mirror_hall',
+    name: 'Shadow Mirror Hall',
     description: 'A reflective wing that returns altered versions of truth.',
-    bossId: 'mirror-keeper',
+    bossId: 'ghost',
   },
   {
-    id: 'astral-vault',
-    name: 'Astral Vault',
+    id: 'scarcity_vault',
+    name: 'Scarcity Vault',
     description: 'A sealed nexus storing records of distant futures.',
-    bossId: 'vault-oracle',
+    bossId: 'scarcity_beast',
   },
 ];
 
 export const ROOM_ORDER: readonly RoomId[] = [
-  'echo-hall',
-  'mirror-archive',
-  'astral-vault',
+  'hall_of_echoes',
+  'shadow_mirror_hall',
+  'scarcity_vault',
 ];

@@ -2,10 +2,10 @@ import type { BossDefinition } from './types';
 
 export const BOSSES: readonly BossDefinition[] = [
   {
-    id: 'librarian-sentinel',
-    roomId: 'echo-hall',
+    id: 'critic',
+    roomId: 'hall_of_echoes',
     name: 'Orin',
-    title: 'Librarian Sentinel',
+    title: 'The Critic',
     description: 'A disciplined guardian enforcing forgotten entry rites.',
     requiredStats: {
       will: 4,
@@ -14,10 +14,10 @@ export const BOSSES: readonly BossDefinition[] = [
     rewardXP: 20,
   },
   {
-    id: 'mirror-keeper',
-    roomId: 'mirror-archive',
+    id: 'ghost',
+    roomId: 'shadow_mirror_hall',
     name: 'Veyra',
-    title: 'Mirror Keeper',
+    title: 'The Ghost',
     description: 'A duelist that bends perception with reflected intent.',
     requiredStats: {
       insight: 4,
@@ -26,10 +26,10 @@ export const BOSSES: readonly BossDefinition[] = [
     rewardXP: 30,
   },
   {
-    id: 'vault-oracle',
-    roomId: 'astral-vault',
+    id: 'scarcity_beast',
+    roomId: 'scarcity_vault',
     name: 'Thel',
-    title: 'Vault Oracle',
+    title: 'The Scarcity Beast',
     description: 'A prophetic entity channeling sealed astral indexes.',
     requiredStats: {
       attunement: 4,
