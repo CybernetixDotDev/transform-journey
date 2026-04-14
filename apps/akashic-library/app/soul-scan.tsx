@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 
 import { SOUL_SCAN_QUESTIONS, runSoulScan } from '../src/engine/SoulScanEngine';
 import { usePlayerStore } from '../src/state/usePlayerStore';
+import { colors, disabledStyle, styles } from '../src/ui/theme';
 
 export default function SoulScanScreen() {
   const router = useRouter();
@@ -40,14 +41,15 @@ export default function SoulScanScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 18, gap: 16 }}>
-      <Text style={{ fontSize: 26, fontWeight: '700' }}>Soul Scan</Text>
-      <Text style={{ opacity: 0.75 }}>
+    <ScrollView contentContainerStyle={styles.screen}>
+      <Text style={styles.eyebrow}>First threshold</Text>
+      <Text style={styles.title}>Soul Scan</Text>
+      <Text style={styles.body}>
         Answer honestly. This is reflective and symbolic, not therapeutic.
       </Text>
 
-      <View style={{ padding: 12, borderWidth: 1, borderRadius: 12 }}>
-        <Text>
+      <View style={styles.panel}>
+        <Text style={styles.body}>
           Progress: {answeredCount}/{total}
         </Text>
       </View>
@@ -55,9 +57,9 @@ export default function SoulScanScreen() {
       {SOUL_SCAN_QUESTIONS.map((question) => (
         <View
           key={question.id}
-          style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 10 }}
+          style={styles.panelRaised}
         >
-          <Text style={{ fontSize: 16, fontWeight: '600' }}>{question.prompt}</Text>
+          <Text style={styles.heading}>{question.prompt}</Text>
 
           {question.options.map((option) => {
             const selected = answers[question.id] === option.id;
@@ -65,15 +67,18 @@ export default function SoulScanScreen() {
               <Pressable
                 key={option.id}
                 onPress={() => onSelect(question.id, option.id)}
-                style={{
-                  paddingVertical: 10,
-                  paddingHorizontal: 12,
-                  borderRadius: 10,
-                  borderWidth: 1,
-                  opacity: selected ? 1 : 0.85,
-                }}
+                style={[
+                  styles.button,
+                  selected && styles.buttonPrimary,
+                  {
+                    alignItems: 'flex-start',
+                    backgroundColor: selected
+                      ? 'rgba(185, 167, 255, 0.18)'
+                      : colors.surfaceSoft,
+                  },
+                ]}
               >
-                <Text style={{ fontWeight: selected ? '700' : '500' }}>
+                <Text style={selected ? styles.buttonTextAccent : styles.buttonText}>
                   {option.label}
                 </Text>
               </Pressable>
@@ -85,29 +90,20 @@ export default function SoulScanScreen() {
       <Pressable
         onPress={onSubmit}
         disabled={!canSubmit}
-        style={{
-          paddingVertical: 14,
-          paddingHorizontal: 14,
-          borderRadius: 12,
-          borderWidth: 1,
-          opacity: canSubmit ? 1 : 0.4,
-          alignItems: 'center',
-        }}
+        style={[
+          styles.button,
+          styles.buttonPrimary,
+          disabledStyle(!canSubmit),
+        ]}
       >
-        <Text style={{ fontSize: 16, fontWeight: '700' }}>Complete Soul Scan</Text>
+        <Text style={styles.buttonTextAccent}>Complete Soul Scan</Text>
       </Pressable>
 
       <Pressable
         onPress={() => router.back()}
-        style={{
-          paddingVertical: 12,
-          paddingHorizontal: 14,
-          borderRadius: 12,
-          borderWidth: 1,
-          alignItems: 'center',
-        }}
+        style={styles.button}
       >
-        <Text style={{ fontWeight: '600' }}>Back</Text>
+        <Text style={styles.buttonText}>Back</Text>
       </Pressable>
     </ScrollView>
   );

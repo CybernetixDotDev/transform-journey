@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Project
-Akashic Library is an Expo / React Native app intended to evolve from a starter template into a guided progression experience.
+Akashic Library is an Expo / React Native app for a guided reflective progression experience.
 
 ## Architecture
 Follow this layered structure:
@@ -21,18 +21,17 @@ Follow this layered structure:
 - Do not overengineer for future multiplayer, AI, or backend features yet
 
 ## Current repo reality
-The running app is still largely an Expo starter template with tabs, modal, and themed wrapper components.
-Core gameplay systems are incomplete or missing.
+The running app now has a V1 deterministic gameplay loop with Soul Scan, rooms, rituals, reflection integrations, local persistence, and a first shared visual theme.
+Some internal naming still uses `boss` terminology for stability even though player-facing copy uses reflection/integration language.
 
-## First implementation target
-Build the first real vertical slice with:
+## Current implementation target
+Keep productizing the V1 loop with:
 
-1. Zustand player state
-2. AsyncStorage persistence and rehydration
-3. Soul Scan flow
-4. One playable room
-5. One ritual completion flow
-6. One boss/unlock path
+1. Navigation polish
+2. Visual consistency
+3. Clear reflection/result flows
+4. Small deterministic content improvements
+5. Focused engine/store tests
 
 ## Expected file responsibilities
 - `src/domain/*`: ids, types, room definitions, ritual definitions, boss definitions, archetypes
@@ -40,6 +39,7 @@ Build the first real vertical slice with:
 - `src/state/usePlayerStore.ts`: central app/player state and actions
 - `src/storage/persistence.ts`: load/save helpers for state persistence
 - `app/*`: screens, navigation, and user flow wiring only
+- `src/ui/theme.ts`: shared visual tokens and reusable styles
 
 ## Implementation style
 - Use TypeScript consistently

@@ -76,7 +76,7 @@ export function getRoomLockReasons(
     }
 
     if (previousBoss && !player.defeatedBosses.includes(previousBoss.id)) {
-      reasons.push(`Defeat ${previousBoss.title} in ${previousRoom?.name ?? 'the previous room'}.`);
+      reasons.push(`Integrate ${previousBoss.title} in ${previousRoom?.name ?? 'the previous room'}.`);
     }
   }
 

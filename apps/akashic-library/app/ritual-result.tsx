@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 
 import { getStatName } from '../src/domain/stats';
 import { usePlayerStore } from '../src/state/usePlayerStore';
+import { colors, styles } from '../src/ui/theme';
 
 export default function RitualResultScreen() {
   const router = useRouter();
@@ -12,31 +13,16 @@ export default function RitualResultScreen() {
 
   if (!result) {
     return (
-      <View
-        style={{
-          flex: 1,
-          padding: 18,
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: 12,
-        }}
-      >
-        <Text style={{ fontSize: 20, fontWeight: '700' }}>
+      <View style={styles.screenCenter}>
+        <Text style={styles.heading}>
           No ritual result found
         </Text>
 
         <Pressable
           onPress={() => router.back()}
-          style={{
-            paddingVertical: 12,
-            paddingHorizontal: 14,
-            borderRadius: 12,
-            borderWidth: 1,
-            alignItems: 'center',
-            minWidth: 180,
-          }}
+          style={[styles.button, { minWidth: 180 }]}
         >
-          <Text style={{ fontWeight: '700' }}>Back</Text>
+          <Text style={styles.buttonText}>Back</Text>
         </Pressable>
       </View>
     );
@@ -48,24 +34,16 @@ export default function RitualResultScreen() {
   });
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 18, gap: 16 }}>
-      <Text style={{ fontSize: 28, fontWeight: '700' }}>
-        Ritual Complete
-      </Text>
+    <ScrollView contentContainerStyle={styles.screen}>
+      <Text style={styles.eyebrow}>Ritual record</Text>
+      <Text style={styles.title}>Ritual Complete</Text>
 
-      <Text style={{ opacity: 0.8 }}>
+      <Text style={styles.body}>
         Your chosen path has altered your inner balance.
       </Text>
 
-      <View
-        style={{
-          padding: 14,
-          borderWidth: 1,
-          borderRadius: 12,
-          gap: 10,
-        }}
-      >
-        <Text style={{ fontSize: 16, fontWeight: '700' }}>Changed Stats</Text>
+      <View style={styles.panelRaised}>
+        <Text style={styles.heading}>Changed Stats</Text>
 
         {changedStats.length > 0 ? (
           changedStats.map((statId) => {
@@ -77,37 +55,32 @@ export default function RitualResultScreen() {
             return (
               <View
                 key={statId}
-                style={{
-                  paddingVertical: 8,
-                  borderTopWidth: 1,
-                }}
+                style={[styles.dividerRow, { gap: 4 }]}
               >
-                <Text style={{ fontWeight: '700' }}>{getStatName(key)}</Text>
-                <Text>
+                <Text style={styles.heading}>{getStatName(key)}</Text>
+                <Text style={styles.body}>
                   {beforeValue} to {afterValue} {delta > 0 ? `(+${delta})` : `(${delta})`}
                 </Text>
               </View>
             );
           })
         ) : (
-          <Text style={{ opacity: 0.8 }}>No stat changes recorded.</Text>
+          <Text style={styles.body}>No stat changes recorded.</Text>
         )}
       </View>
 
-      <View
-        style={{
-          padding: 14,
-          borderWidth: 1,
-          borderRadius: 12,
-          gap: 8,
-        }}
-      >
-        <Text style={{ fontSize: 16, fontWeight: '700' }}>Current Totals</Text>
+      <View style={styles.panel}>
+        <Text style={styles.heading}>Current Totals</Text>
 
         {Object.entries(result.after).map(([statId, value]) => (
-          <Text key={statId}>
-            {getStatName(statId as keyof typeof result.after)}: {value}
-          </Text>
+          <View key={statId} style={styles.row}>
+            <Text style={styles.body}>
+              {getStatName(statId as keyof typeof result.after)}
+            </Text>
+            <Text style={[styles.statText, { color: colors.accentStrong }]}>
+              {value}
+            </Text>
+          </View>
         ))}
       </View>
 
@@ -119,15 +92,9 @@ export default function RitualResultScreen() {
             params: { id: result.roomId },
           });
         }}
-        style={{
-          paddingVertical: 12,
-          paddingHorizontal: 14,
-          borderRadius: 12,
-          borderWidth: 1,
-          alignItems: 'center',
-        }}
+        style={[styles.button, styles.buttonPrimary]}
       >
-        <Text style={{ fontWeight: '700' }}>Return to Room</Text>
+        <Text style={styles.buttonTextAccent}>Return to Room</Text>
       </Pressable>
     </ScrollView>
   );

@@ -6,6 +6,7 @@ import type { RoomId } from '../../src/domain/types';
 import { RITUALS } from '../../src/domain/rituals';
 import { STATS, getStatName } from '../../src/domain/stats';
 import { usePlayerStore } from '../../src/state/usePlayerStore';
+import { colors, styles } from '../../src/ui/theme';
 
 export default function RitualScreen() {
   const router = useRouter();
@@ -24,19 +25,13 @@ export default function RitualScreen() {
 
   if (!roomId || !ritual) {
     return (
-      <View style={{ flex: 1, padding: 18, justifyContent: 'center', gap: 10 }}>
-        <Text style={{ fontSize: 18, fontWeight: '700' }}>Ritual not found</Text>
+      <View style={styles.screenCenter}>
+        <Text style={styles.heading}>Ritual not found</Text>
         <Pressable
           onPress={() => router.back()}
-          style={{
-            paddingVertical: 12,
-            paddingHorizontal: 14,
-            borderRadius: 12,
-            borderWidth: 1,
-            alignItems: 'center',
-          }}
+          style={styles.button}
         >
-          <Text style={{ fontWeight: '700' }}>Back</Text>
+          <Text style={styles.buttonText}>Back</Text>
         </Pressable>
       </View>
     );
@@ -53,6 +48,8 @@ export default function RitualScreen() {
 
     completeRitual({
       roomId,
+      ritualId: ritual.id,
+      choiceId: selectedChoice.id,
       effects: selectedChoice.effects,
     });
 
@@ -63,28 +60,23 @@ export default function RitualScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 18, gap: 14 }}>
-      <Text style={{ fontSize: 26, fontWeight: '700' }}>{ritual.name}</Text>
-      <Text style={{ opacity: 0.8 }}>{ritual.description}</Text>
+    <ScrollView contentContainerStyle={styles.screen}>
+      <Text style={styles.eyebrow}>Ritual chamber</Text>
+      <Text style={styles.title}>{ritual.name}</Text>
+      <Text style={styles.body}>{ritual.description}</Text>
 
-      <View
-        style={{
-          padding: 14,
-          borderWidth: 1,
-          borderRadius: 12,
-          gap: 6,
-        }}
-      >
-        <Text style={{ fontSize: 16, fontWeight: '700' }}>Current Stats</Text>
+      <View style={styles.panel}>
+        <Text style={styles.heading}>Current Stats</Text>
         {STATS.map((stat) => (
-          <Text key={stat.id}>
-            {stat.name}: {player.stats[stat.id]}
-          </Text>
+          <View key={stat.id} style={styles.row}>
+            <Text style={styles.body}>{stat.name}</Text>
+            <Text style={styles.statText}>{player.stats[stat.id]}</Text>
+          </View>
         ))}
       </View>
 
       <View style={{ gap: 10 }}>
-        <Text style={{ fontSize: 16, fontWeight: '700' }}>Choose your approach</Text>
+        <Text style={styles.heading}>Choose your approach</Text>
 
         {ritual.choices.map((choice) => {
           const selected = choice.id === selectedChoiceId;
@@ -93,21 +85,23 @@ export default function RitualScreen() {
             <Pressable
               key={choice.id}
               onPress={() => setSelectedChoiceId(choice.id)}
-              style={{
-                padding: 14,
-                borderWidth: 1,
-                borderRadius: 12,
-                gap: 8,
-                backgroundColor: selected ? '#f3f4f6' : 'transparent',
-              }}
+              style={[
+                styles.panelRaised,
+                selected && {
+                  borderColor: colors.accent,
+                  backgroundColor: 'rgba(185, 167, 255, 0.18)',
+                },
+              ]}
             >
-              <Text style={{ fontWeight: '700' }}>{choice.label}</Text>
-              <Text style={{ opacity: 0.8 }}>{choice.description}</Text>
+              <Text style={[styles.heading, selected && { color: colors.accentStrong }]}>
+                {choice.label}
+              </Text>
+              <Text style={styles.body}>{choice.description}</Text>
 
               <View style={{ gap: 2 }}>
-                <Text style={{ fontWeight: '600' }}>Effects</Text>
+                <Text style={styles.heading}>Effects</Text>
                 {Object.entries(choice.effects).map(([statId, delta]) => (
-                  <Text key={statId}>
+                  <Text key={statId} style={styles.body}>
                     {getStatName(statId as keyof typeof choice.effects)}: +{delta}
                   </Text>
                 ))}
@@ -119,29 +113,20 @@ export default function RitualScreen() {
 
       <Pressable
         onPress={handleResolveRitual}
-        style={{
-          paddingVertical: 12,
-          paddingHorizontal: 14,
-          borderRadius: 12,
-          borderWidth: 1,
-          alignItems: 'center',
-          opacity: selectedChoice ? 1 : 0.6,
-        }}
+        style={[
+          styles.button,
+          styles.buttonPrimary,
+          { opacity: selectedChoice ? 1 : 0.6 },
+        ]}
       >
-        <Text style={{ fontWeight: '700' }}>Resolve Ritual</Text>
+        <Text style={styles.buttonTextAccent}>Resolve Ritual</Text>
       </Pressable>
 
       <Pressable
         onPress={() => router.back()}
-        style={{
-          paddingVertical: 12,
-          paddingHorizontal: 14,
-          borderRadius: 12,
-          borderWidth: 1,
-          alignItems: 'center',
-        }}
+        style={styles.button}
       >
-        <Text style={{ fontWeight: '700' }}>Back</Text>
+        <Text style={styles.buttonText}>Back</Text>
       </Pressable>
     </ScrollView>
   );

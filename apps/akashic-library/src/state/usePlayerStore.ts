@@ -6,6 +6,7 @@ import type {
   ArchetypeId,
   BossId,
   PlayerState,
+  ReflectionHistoryEntry,
   RitualLogEntry,
   RoomId,
   StatBlock,
@@ -13,6 +14,7 @@ import type {
 } from '../domain/types';
 import type { SoulScanResult } from '../engine/SoulScanEngine';
 import { canChallengeBoss } from '../engine/BossEngine';
+import { selectReflectionPrompt } from '../engine/ReflectionEngine';
 import { completeRitual as resolveRitual } from '../engine/RitualEngine';
 import {
   getUnlockedRoomAfterBoss,
@@ -28,6 +30,7 @@ import {
 
 type CompleteRitualInput = Omit<RitualLogEntry, 'id' | 'completedAt'> & {
   effects?: Partial<StatBlock>;
+  choiceId?: string;
 };
 
 type RitualResult = {
@@ -86,6 +89,13 @@ const safePositive = (value: number): number => {
   return Math.max(0, value);
 };
 
+const normalizePlayerState = (player: PlayerState): PlayerState => ({
+  ...player,
+  stats: copyStatBlock(player.stats),
+  ritualChoices: player.ritualChoices ?? [],
+  reflectionHistory: player.reflectionHistory ?? [],
+});
+
 const logPersistError = (err: unknown): void => {
   if (__DEV__) {
     console.warn('Failed to persist player state', err);
@@ -105,6 +115,8 @@ export const createDefaultPlayerState = (): PlayerState => {
     unlockedRooms: [],
     defeatedBosses: [],
     ritualHistory: [],
+    ritualChoices: [],
+    reflectionHistory: [],
   };
 };
 
@@ -115,8 +127,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
     set((state) => {
       const updated = update(state.player);
       const stamped: PlayerState = {
-        ...updated,
-        stats: copyStatBlock(updated.stats),
+        ...normalizePlayerState(updated),
         updatedAt: new Date().toISOString(),
       };
 
@@ -138,7 +149,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
     hydrate: async () => {
       const loaded = await loadPlayerState();
       const player = loaded
-        ? { ...loaded, stats: copyStatBlock(loaded.stats) }
+        ? normalizePlayerState(loaded)
         : createDefaultPlayerState();
 
       set({ hydrated: true, player });
@@ -203,6 +214,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 
         const safeReward = safePositive(rewardXP ?? boss?.rewardXP ?? 0);
         const completedAt = new Date().toISOString();
+        const prompt = selectReflectionPrompt(player, boss);
         const defeatedPlayer: PlayerState = {
           ...player,
           defeatedBosses: [...player.defeatedBosses, bossId],
@@ -210,18 +222,31 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
         };
 
         const nextPlayer = unlockNextRoomAfterBoss(defeatedPlayer, boss.roomId);
+        const unlockedRoomId = getUnlockedRoomAfterBoss(player, nextPlayer);
+        const reflectionEntry: ReflectionHistoryEntry = {
+          id: completedAt,
+          bossId,
+          roomId: boss.roomId,
+          prompt,
+          rewardXP: safeReward,
+          unlockedRoomId,
+          integratedAt: completedAt,
+        };
 
         defeated = true;
         bossResult = {
           bossId,
           roomId: boss.roomId,
           rewardXP: safeReward,
-          unlockedRoomId: getUnlockedRoomAfterBoss(player, nextPlayer),
+          unlockedRoomId,
           isEndOfV1: getNextRoomToUnlock(boss.roomId) === null,
           completedAt,
         };
 
-        return nextPlayer;
+        return {
+          ...nextPlayer,
+          reflectionHistory: [...player.reflectionHistory, reflectionEntry],
+        };
       });
 
       if (bossResult) {
@@ -233,10 +258,38 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 
     completeRitual: (entry) => {
       const before = copyStatBlock(get().player.stats);
+      const completedAt = new Date();
 
-      persistMutation((player) =>
-        resolveRitual(player, entry.roomId, entry.effects ?? {}, entry.bossId)
-      );
+      persistMutation((player) => {
+        const effects = entry.effects ?? {};
+        const nextPlayer = resolveRitual(
+          player,
+          entry.roomId,
+          effects,
+          entry.bossId,
+          completedAt,
+          entry.ritualId
+        );
+
+        if (!entry.ritualId || !entry.choiceId) return nextPlayer;
+
+        const completedAtIso = completedAt.toISOString();
+
+        return {
+          ...nextPlayer,
+          ritualChoices: [
+            ...player.ritualChoices,
+            {
+              id: completedAtIso,
+              roomId: entry.roomId,
+              ritualId: entry.ritualId,
+              choiceId: entry.choiceId,
+              effects,
+              completedAt: completedAtIso,
+            },
+          ],
+        };
+      });
 
       const after = copyStatBlock(get().player.stats);
 

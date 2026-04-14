@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { getBossById } from '../src/domain/bosses';
 import { getRoomById } from '../src/domain/rooms';
 import { usePlayerStore } from '../src/state/usePlayerStore';
+import { colors, styles } from '../src/ui/theme';
 
 export default function BossResultScreen() {
   const router = useRouter();
@@ -14,31 +15,16 @@ export default function BossResultScreen() {
 
   if (!result) {
     return (
-      <View
-        style={{
-          flex: 1,
-          padding: 18,
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: 12,
-        }}
-      >
-        <Text style={{ fontSize: 20, fontWeight: '700' }}>
-          No boss result found
+      <View style={styles.screenCenter}>
+        <Text style={styles.heading}>
+          No reflection result found
         </Text>
 
         <Pressable
           onPress={() => router.replace('/(tabs)/explore')}
-          style={{
-            paddingVertical: 12,
-            paddingHorizontal: 14,
-            borderRadius: 12,
-            borderWidth: 1,
-            alignItems: 'center',
-            minWidth: 180,
-          }}
+          style={[styles.button, { minWidth: 180 }]}
         >
-          <Text style={{ fontWeight: '700' }}>Return to Map</Text>
+          <Text style={styles.buttonText}>Return to Map</Text>
         </Pressable>
       </View>
     );
@@ -65,37 +51,42 @@ export default function BossResultScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 18, gap: 14 }}>
-      <Text style={{ fontSize: 28, fontWeight: '700' }}>
-        Boss Defeated
-      </Text>
+    <ScrollView contentContainerStyle={styles.screen}>
+      <Text style={styles.eyebrow}>Integration complete</Text>
+      <Text style={styles.title}>Reflection Integrated</Text>
 
-      <View style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 8 }}>
-        <Text style={{ fontSize: 18, fontWeight: '700' }}>
+      <View style={styles.panelRaised}>
+        <Text style={[styles.heading, { color: colors.accentStrong }]}>
           {boss ? `${boss.title} - ${boss.name}` : result.bossId}
         </Text>
-        <Text>XP gained: {result.rewardXP}</Text>
-        <Text style={{ opacity: 0.7, fontSize: 12 }}>
+        <Text style={styles.body}>
+          {boss
+            ? `You integrated ${boss.title} and carried its reflection forward.`
+            : 'You integrated the reflection and carried it forward.'}
+        </Text>
+        {boss && <Text style={styles.body}>Reflection: {boss.represents}</Text>}
+        <Text style={styles.statText}>XP gained: {result.rewardXP}</Text>
+        <Text style={styles.subtle}>
           Completed: {result.completedAt}
         </Text>
       </View>
 
-      <View style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 8 }}>
-        <Text style={{ fontSize: 16, fontWeight: '700' }}>Progression</Text>
+      <View style={styles.panel}>
+        <Text style={styles.heading}>Progression</Text>
         {unlockedRoom ? (
           <>
-            <Text>Next room unlocked:</Text>
-            <Text style={{ fontSize: 18, fontWeight: '700' }}>
+            <Text style={styles.body}>Next room unlocked</Text>
+            <Text style={[styles.heading, { color: colors.success }]}>
               {unlockedRoom.name}
             </Text>
-            <Text style={{ opacity: 0.75 }}>{unlockedRoom.description}</Text>
+            <Text style={styles.body}>{unlockedRoom.description}</Text>
           </>
         ) : (
           <View style={{ gap: 6 }}>
-            <Text style={{ fontSize: 18, fontWeight: '700' }}>
+            <Text style={styles.heading}>
               {result.isEndOfV1 ? 'Current journey complete' : 'No new room unlocked'}
             </Text>
-            <Text style={{ opacity: 0.75 }}>
+            <Text style={styles.body}>
               {result.isEndOfV1
                 ? 'You have completed the V1 path. Return to the map to review your progress or reset when you want to begin again.'
                 : 'Return to the map to continue reviewing your progress.'}
@@ -106,15 +97,9 @@ export default function BossResultScreen() {
 
       <Pressable
         onPress={continueToNext}
-        style={{
-          paddingVertical: 12,
-          paddingHorizontal: 14,
-          borderRadius: 12,
-          borderWidth: 1,
-          alignItems: 'center',
-        }}
+        style={[styles.button, styles.buttonPrimary]}
       >
-        <Text style={{ fontWeight: '700' }}>
+        <Text style={styles.buttonTextAccent}>
           {unlockedRoom ? 'Enter Next Room' : 'Return to Map'}
         </Text>
       </Pressable>
@@ -125,15 +110,9 @@ export default function BossResultScreen() {
             clear();
             router.replace('/(tabs)/explore');
           }}
-          style={{
-            paddingVertical: 12,
-            paddingHorizontal: 14,
-            borderRadius: 12,
-            borderWidth: 1,
-            alignItems: 'center',
-          }}
+          style={styles.button}
         >
-          <Text style={{ fontWeight: '700' }}>Return to Map</Text>
+          <Text style={styles.buttonText}>Return to Map</Text>
         </Pressable>
       )}
 
@@ -143,15 +122,9 @@ export default function BossResultScreen() {
             clear();
             void reset().then(() => router.replace('/(tabs)'));
           }}
-          style={{
-            paddingVertical: 12,
-            paddingHorizontal: 14,
-            borderRadius: 12,
-            borderWidth: 1,
-            alignItems: 'center',
-          }}
+          style={styles.button}
         >
-          <Text style={{ fontWeight: '700' }}>Restart Journey</Text>
+          <Text style={styles.buttonText}>Restart Journey</Text>
         </Pressable>
       )}
     </ScrollView>

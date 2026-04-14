@@ -66,7 +66,8 @@ export function completeRitual(
   roomId: RoomId,
   effects: RitualEffect,
   bossId?: BossId,
-  now: Date = new Date()
+  now: Date = new Date(),
+  ritualId?: string
 ): PlayerState {
   const completedAt = now.toISOString();
 
@@ -80,6 +81,7 @@ export function completeRitual(
         id: completedAt,
         roomId,
         bossId,
+        ritualId,
         completedAt,
       },
     ],

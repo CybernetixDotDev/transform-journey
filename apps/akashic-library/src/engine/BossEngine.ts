@@ -15,7 +15,7 @@ export function canChallengeBoss(
   const reasons: string[] = [];
 
   if (boss.roomId !== roomId) {
-    reasons.push('Boss does not belong to this room.');
+    reasons.push('Reflection does not belong to this room.');
   }
 
   if (!player.unlockedRooms.includes(roomId)) {
@@ -23,11 +23,11 @@ export function canChallengeBoss(
   }
 
   if (player.defeatedBosses.includes(boss.id)) {
-    reasons.push('Boss already defeated.');
+    reasons.push('Reflection already integrated.');
   }
 
   if (!hasCompletedRitualForRoomToday(player, roomId)) {
-    reasons.push("Complete today's ritual to challenge this boss.");
+    reasons.push("Complete today's ritual to begin integration.");
   }
 
   for (const [statId, required] of Object.entries(boss.requiredStats)) {

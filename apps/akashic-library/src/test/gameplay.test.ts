@@ -4,6 +4,7 @@ import { BOSSES } from '../domain/bosses';
 import { DEFAULT_STATS, STAT_IDS } from '../domain/stats';
 import type { PlayerState, RoomId } from '../domain/types';
 import { canChallengeBoss } from '../engine/BossEngine';
+import { selectReflectionPrompt } from '../engine/ReflectionEngine';
 import { completeRitual } from '../engine/RitualEngine';
 import { runSoulScan } from '../engine/SoulScanEngine';
 import { getRoomLockReasons } from '../engine/UnlockEngine';
@@ -102,6 +103,145 @@ describe('RitualEngine', () => {
   });
 });
 
+describe('ReflectionEngine', () => {
+  it('falls back to the base prompt when no prompt variant matches', () => {
+    const player = createPlayer({
+      archetypeId: 'warrior',
+      stats: {
+        ...DEFAULT_STATS,
+        clarity: 1,
+      },
+    });
+
+    expect(selectReflectionPrompt(player, secondBoss)).toBe(secondBoss.prompt);
+  });
+
+  it('selects an archetype-specific prompt deterministically', () => {
+    const player = createPlayer({
+      archetypeId: 'seer',
+      stats: {
+        ...DEFAULT_STATS,
+        clarity: 4,
+      },
+    });
+
+    expect(selectReflectionPrompt(player, secondBoss)).toBe(
+      'What pattern can you name without turning it into a verdict?'
+    );
+  });
+
+  it('selects a stat-specific prompt when the stat criteria match', () => {
+    const player = createPlayer({
+      archetypeId: 'warrior',
+      stats: {
+        ...DEFAULT_STATS,
+        clarity: 4,
+      },
+    });
+
+    expect(selectReflectionPrompt(player, secondBoss)).toBe(
+      'How can your clarity guide the next step without demanding perfection?'
+    );
+  });
+
+  it('selects a progression-specific prompt for the final reflection', () => {
+    const player = createPlayer({
+      archetypeId: 'warrior',
+      defeatedBosses: ['ghost', 'critic'],
+      stats: {
+        ...DEFAULT_STATS,
+        selfWorth: 4,
+      },
+    });
+
+    expect(selectReflectionPrompt(player, finalBoss)).toBe(
+      'What abundance can you carry forward after integrating the earlier reflections?'
+    );
+  });
+
+  it('selects a prompt from a prior ritual choice memory', () => {
+    const player = createPlayer({
+      archetypeId: 'seer',
+      stats: {
+        ...DEFAULT_STATS,
+        courage: 3,
+      },
+      ritualChoices: [
+        {
+          id: 'choice-memory',
+          roomId: 'shadow_mirror_hall',
+          ritualId: 'shadow_mirror_hall-mirror',
+          choiceId: 'soften-the-gaze',
+          effects: {
+            compassion: 2,
+            courage: 1,
+          },
+          completedAt: todayIso(),
+        },
+      ],
+    });
+
+    expect(selectReflectionPrompt(player, firstBoss)).toBe(
+      'You chose to soften your gaze; what becomes easier to meet now?'
+    );
+  });
+
+  it('selects a prompt from prior reflection memory', () => {
+    const player = createPlayer({
+      archetypeId: 'warrior',
+      stats: {
+        ...DEFAULT_STATS,
+        clarity: 1,
+      },
+      reflectionHistory: [
+        {
+          id: 'ghost-memory',
+          bossId: 'ghost',
+          roomId: 'shadow_mirror_hall',
+          prompt: firstBoss.prompt,
+          rewardXP: firstBoss.rewardXP,
+          unlockedRoomId: 'hall_of_echoes',
+          integratedAt: todayIso(),
+        },
+      ],
+    });
+
+    expect(selectReflectionPrompt(player, secondBoss)).toBe(
+      'After meeting The Ghost, which echo can be heard without becoming your identity?'
+    );
+  });
+
+  it('selects a prompt from a repeated ritual choice pattern', () => {
+    const choiceMemory = {
+      roomId: 'scarcity_vault' as const,
+      ritualId: 'scarcity_vault-release',
+      choiceId: 'choose-enough',
+      effects: {
+        selfWorth: 2,
+        discipline: 1,
+      },
+      completedAt: todayIso(),
+    };
+    const player = createPlayer({
+      archetypeId: 'warrior',
+      ritualChoices: [
+        {
+          ...choiceMemory,
+          id: 'choice-memory-1',
+        },
+        {
+          ...choiceMemory,
+          id: 'choice-memory-2',
+        },
+      ],
+    });
+
+    expect(selectReflectionPrompt(player, finalBoss)).toBe(
+      'You have practiced choosing enough; what would enough look like inside this vault?'
+    );
+  });
+});
+
 describe('BossEngine', () => {
   it('cannot challenge the first boss before completing a ritual', () => {
     const player = createPlayer({
@@ -116,7 +256,7 @@ describe('BossEngine', () => {
     const check = canChallengeBoss(player, 'shadow_mirror_hall', firstBoss);
 
     expect(check.ok).toBe(false);
-    expect(check.reasons).toContain("Complete today's ritual to challenge this boss.");
+    expect(check.reasons).toContain("Complete today's ritual to begin integration.");
   });
 
   it('can challenge the first boss after ritual and stat requirements are met', () => {
@@ -201,6 +341,36 @@ describe('usePlayerStore', () => {
       roomId: 'hall_of_echoes',
       rewardXP: secondBoss.rewardXP,
       unlockedRoomId: 'scarcity_vault',
+    });
+  });
+
+  it('records ritual choice memory when completing a ritual', () => {
+    const player = createPlayer({
+      unlockedRooms: ['shadow_mirror_hall'],
+    });
+    setStorePlayer(player);
+
+    usePlayerStore.getState().completeRitual({
+      roomId: 'shadow_mirror_hall',
+      ritualId: 'shadow_mirror_hall-mirror',
+      choiceId: 'soften-the-gaze',
+      effects: {
+        compassion: 2,
+        courage: 1,
+      },
+    });
+
+    const state = usePlayerStore.getState();
+
+    expect(state.player.ritualChoices).toHaveLength(1);
+    expect(state.player.ritualChoices[0]).toMatchObject({
+      roomId: 'shadow_mirror_hall',
+      ritualId: 'shadow_mirror_hall-mirror',
+      choiceId: 'soften-the-gaze',
+      effects: {
+        compassion: 2,
+        courage: 1,
+      },
     });
   });
 
@@ -299,6 +469,14 @@ describe('usePlayerStore', () => {
     expect(state.player.ascensionPoints).toBe(firstBoss.rewardXP);
     expect(state.player.defeatedBosses).toContain('ghost');
     expect(state.player.unlockedRooms).toContain('hall_of_echoes' satisfies RoomId);
+    expect(state.player.reflectionHistory).toHaveLength(1);
+    expect(state.player.reflectionHistory[0]).toMatchObject({
+      bossId: 'ghost',
+      roomId: 'shadow_mirror_hall',
+      prompt: firstBoss.prompt,
+      rewardXP: firstBoss.rewardXP,
+      unlockedRoomId: 'hall_of_echoes',
+    });
     expect(state.lastBossResult).toMatchObject({
       bossId: 'ghost',
       roomId: 'shadow_mirror_hall',
@@ -348,7 +526,7 @@ describe('UnlockEngine', () => {
     });
 
     expect(getRoomLockReasons(player, 'hall_of_echoes')).toContain(
-      'Defeat The Ghost in Shadow Mirror Hall.'
+      'Integrate The Ghost in Shadow Mirror Hall.'
     );
   });
 

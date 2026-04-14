@@ -42,12 +42,38 @@ export type RoomDefinition = {
   requiredStatToUnlock?: Partial<StatBlock>;
 };
 
+export type ReflectionPromptCriteria = {
+  archetypeId?: ArchetypeId;
+  minStats?: Partial<StatBlock>;
+  maxStats?: Partial<StatBlock>;
+  integratedReflectionsAtLeast?: number;
+  memory?: ReflectionMemoryCriteria;
+};
+
+export type ReflectionPromptVariant = {
+  id: string;
+  prompt: string;
+  criteria: ReflectionPromptCriteria;
+};
+
+export type ReflectionMemoryCriteria = {
+  completedRitualChoiceId?: string;
+  repeatedRitualChoice?: {
+    choiceId: string;
+    atLeast: number;
+  };
+  integratedReflectionId?: BossId;
+};
+
 export type BossDefinition = {
   id: BossId;
   roomId: RoomId;
   name: string;
   title: string;
   description: string;
+  represents: string;
+  prompt: string;
+  promptVariants?: readonly ReflectionPromptVariant[];
   requiredStats: Partial<StatBlock>;
   rewardXP: number;
 };
@@ -78,6 +104,25 @@ export type RitualLogEntry = {
   completedAt: string;
 };
 
+export type RitualChoiceHistoryEntry = {
+  id: string;
+  roomId: RoomId;
+  ritualId: string;
+  choiceId: string;
+  effects: RitualEffect;
+  completedAt: string;
+};
+
+export type ReflectionHistoryEntry = {
+  id: string;
+  bossId: BossId;
+  roomId: RoomId;
+  prompt: string;
+  rewardXP: number;
+  unlockedRoomId: RoomId | null;
+  integratedAt: string;
+};
+
 export type PlayerState = {
   version: 1;
   createdAt: string;
@@ -88,4 +133,6 @@ export type PlayerState = {
   unlockedRooms: RoomId[];
   defeatedBosses: BossId[];
   ritualHistory: RitualLogEntry[];
+  ritualChoices: RitualChoiceHistoryEntry[];
+  reflectionHistory: ReflectionHistoryEntry[];
 };

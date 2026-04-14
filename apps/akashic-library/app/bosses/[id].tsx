@@ -8,6 +8,8 @@ import { BOSSES } from '../../src/domain/bosses';
 import { getStatName } from '../../src/domain/stats';
 import { usePlayerStore } from '../../src/state/usePlayerStore';
 import { canChallengeBoss } from '../../src/engine/BossEngine';
+import { selectReflectionPrompt } from '../../src/engine/ReflectionEngine';
+import { colors, disabledStyle, styles } from '../../src/ui/theme';
 
 const BOSS_RESULT_ROUTE = '/boss-result' as Href;
 
@@ -23,29 +25,24 @@ export default function BossScreen() {
 
   if (!bossId || !boss) {
     return (
-      <View style={{ flex: 1, padding: 18, justifyContent: 'center', gap: 10 }}>
-        <Text style={{ fontSize: 18, fontWeight: '700' }}>Boss not found</Text>
+      <View style={styles.screenCenter}>
+        <Text style={styles.heading}>Reflection not found</Text>
         <Pressable
           onPress={() => router.back()}
-          style={{
-            paddingVertical: 12,
-            paddingHorizontal: 14,
-            borderRadius: 12,
-            borderWidth: 1,
-            alignItems: 'center',
-          }}
+          style={styles.button}
         >
-          <Text style={{ fontWeight: '700' }}>Back</Text>
+          <Text style={styles.buttonText}>Back</Text>
         </Pressable>
       </View>
     );
   }
 
-  const bossDefeated = player.defeatedBosses.includes(boss.id);
+  const bossIntegrated = player.defeatedBosses.includes(boss.id);
   const bossCheck = canChallengeBoss(player, boss.roomId, boss);
+  const reflectionPrompt = selectReflectionPrompt(player, boss);
 
   const handleChallengeBoss = () => {
-    if (!bossCheck.ok || bossDefeated) return;
+    if (!bossCheck.ok || bossIntegrated) return;
 
     const defeated = defeatBoss(boss.id, boss.rewardXP);
     if (defeated) {
@@ -54,23 +51,26 @@ export default function BossScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 18, gap: 14 }}>
-      <Text style={{ fontSize: 26, fontWeight: '700' }}>{boss.name}</Text>
-      <Text style={{ fontSize: 18, fontWeight: '600' }}>{boss.title}</Text>
-      <Text style={{ opacity: 0.8 }}>{boss.description}</Text>
+    <ScrollView contentContainerStyle={styles.screen}>
+      <Text style={styles.eyebrow}>Reflection encounter</Text>
+      <Text style={styles.title}>{boss.title}</Text>
+      <Text style={[styles.heading, { color: colors.accentStrong }]}>{boss.name}</Text>
+      <Text style={styles.body}>{boss.description}</Text>
 
-      <View
-        style={{
-          padding: 14,
-          borderWidth: 1,
-          borderRadius: 12,
-          gap: 8,
-        }}
-      >
-        <Text style={{ fontSize: 16, fontWeight: '700' }}>Required Stats</Text>
+      <View style={styles.panelRaised}>
+        <Text style={styles.heading}>Represents</Text>
+        <Text style={styles.body}>{boss.represents}</Text>
+        <Text style={styles.heading}>Prompt</Text>
+        <Text style={[styles.body, { color: colors.text }]}>
+          {reflectionPrompt}
+        </Text>
+      </View>
+
+      <View style={styles.panel}>
+        <Text style={styles.heading}>Readiness Requirements</Text>
 
         {Object.entries(boss.requiredStats).length === 0 ? (
-          <Text style={{ opacity: 0.75 }}>-</Text>
+          <Text style={styles.subtle}>-</Text>
         ) : (
           Object.entries(boss.requiredStats).map(([statId, required]) => {
             const key = statId as keyof typeof player.stats;
@@ -78,10 +78,10 @@ export default function BossScreen() {
             return (
               <View
                 key={statId}
-                style={{ flexDirection: 'row', justifyContent: 'space-between' }}
+                style={styles.row}
               >
-                <Text>{getStatName(key)}</Text>
-                <Text>
+                <Text style={styles.body}>{getStatName(key)}</Text>
+                <Text style={styles.statText}>
                   {player.stats[key]} / {required}
                 </Text>
               </View>
@@ -89,15 +89,15 @@ export default function BossScreen() {
           })
         )}
 
-        <Text style={{ marginTop: 6 }}>Reward XP: {boss.rewardXP}</Text>
-        <Text>Defeated: {bossDefeated ? 'Yes' : 'No'}</Text>
+        <Text style={styles.body}>Integration XP: {boss.rewardXP}</Text>
+        <Text style={styles.body}>Integrated: {bossIntegrated ? 'Yes' : 'No'}</Text>
       </View>
 
-      {!bossDefeated && bossCheck.reasons.length > 0 && (
-        <View style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 6 }}>
-          <Text style={{ fontWeight: '700' }}>You are not ready yet:</Text>
+      {!bossIntegrated && bossCheck.reasons.length > 0 && (
+        <View style={styles.panel}>
+          <Text style={styles.heading}>Before Integration</Text>
           {bossCheck.reasons.map((reason) => (
-            <Text key={reason} style={{ opacity: 0.8 }}>
+            <Text key={reason} style={styles.subtle}>
               - {reason}
             </Text>
           ))}
@@ -105,19 +105,16 @@ export default function BossScreen() {
       )}
 
       <Pressable
-        disabled={!bossCheck.ok || bossDefeated}
+        disabled={!bossCheck.ok || bossIntegrated}
         onPress={handleChallengeBoss}
-        style={{
-          paddingVertical: 12,
-          paddingHorizontal: 14,
-          borderRadius: 12,
-          borderWidth: 1,
-          alignItems: 'center',
-          opacity: !bossCheck.ok || bossDefeated ? 0.4 : 1,
-        }}
+        style={[
+          styles.button,
+          styles.buttonPrimary,
+          disabledStyle(!bossCheck.ok || bossIntegrated),
+        ]}
       >
-        <Text style={{ fontWeight: '700' }}>
-          {bossDefeated ? 'Boss Defeated' : 'Face the Boss'}
+        <Text style={styles.buttonTextAccent}>
+          {bossIntegrated ? 'Reflection Integrated' : 'Integrate Reflection'}
         </Text>
       </Pressable>
 
@@ -128,15 +125,9 @@ export default function BossScreen() {
             params: { id: boss.roomId },
           })
         }
-        style={{
-          paddingVertical: 12,
-          paddingHorizontal: 14,
-          borderRadius: 12,
-          borderWidth: 1,
-          alignItems: 'center',
-        }}
+        style={styles.button}
       >
-        <Text style={{ fontWeight: '700' }}>Back to Room</Text>
+        <Text style={styles.buttonText}>Back to Room</Text>
       </Pressable>
     </ScrollView>
   );
