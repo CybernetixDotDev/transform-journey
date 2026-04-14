@@ -65,12 +65,13 @@ export default function RoomScreen() {
           padding: 18,
           gap: 14,
           minHeight: '100%',
-          backgroundColor: 'rgba(9,10,18,0.72)',
+          backgroundColor: 'rgba(9,10,18,0.68)',
+          paddingBottom: 28,
         }}
       >
         <View
           style={{
-            backgroundColor: 'rgba(9,10,18,0.72)',
+            backgroundColor: 'rgba(9,10,18,0.78)',
             borderColor: mood.accent,
             borderWidth: 1,
             borderRadius: 8,
@@ -78,50 +79,66 @@ export default function RoomScreen() {
             gap: 14,
           }}
         >
-          <Image
-            source={getRoomAsset(roomId, 'sigil')}
-            style={{ width: 88, height: 88, alignSelf: 'center' }}
-            resizeMode="contain"
-          />
+          <View style={{ alignItems: 'center', gap: 10 }}>
+            <View
+              style={{
+                width: 104,
+                height: 104,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: mood.accent,
+                backgroundColor: mood.glow,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Image
+                source={getRoomAsset(roomId, 'sigil')}
+                style={{ width: 84, height: 84 }}
+                resizeMode="contain"
+              />
+            </View>
 
-          <Text
-            style={{
-              fontSize: 26,
-              fontWeight: '700',
-              color: colors.text,
-              textAlign: 'center',
-            }}
-          >
-            {room.name}
-          </Text>
+            <Text style={styles.eyebrow}>Archive chamber</Text>
+            <Text
+              style={{
+                fontSize: 28,
+                fontWeight: '700',
+                color: colors.text,
+                textAlign: 'center',
+              }}
+            >
+              {room.name}
+            </Text>
 
-          <Text
-            style={{
-              color: colors.textMuted,
-              textAlign: 'center',
-              lineHeight: 22,
-            }}
-          >
-            {room.description}
-          </Text>
+            <Text
+              style={{
+                color: colors.textMuted,
+                textAlign: 'center',
+                lineHeight: 22,
+              }}
+            >
+              {room.description}
+            </Text>
+          </View>
 
           <View
             style={{
               padding: 14,
               borderWidth: 1,
-              borderColor: colors.border,
+              borderColor: unlocked ? mood.accent : colors.border,
               borderRadius: 8,
-              gap: 6,
+              gap: 8,
               opacity: unlocked ? 1 : 0.65,
-              backgroundColor: colors.surfaceSoft,
+              backgroundColor: unlocked ? mood.glow : colors.surfaceSoft,
             }}
           >
-            <Text style={styles.heading}>
-              Access
-            </Text>
-            <Text style={styles.body}>
-              Status: {unlocked ? 'Unlocked' : 'Locked'}
-            </Text>
+            <View style={styles.row}>
+              <Text style={styles.heading}>Access</Text>
+              <Text style={[styles.statText, { color: unlocked ? colors.success : colors.gold }]}>
+                {unlocked ? 'Unlocked' : 'Locked'}
+              </Text>
+            </View>
             {!unlocked && (
               <Text style={styles.subtle}>
                 This room is locked. Return to the map and progress to unlock it.
@@ -134,24 +151,27 @@ export default function RoomScreen() {
               style={{
                 padding: 14,
                 borderWidth: 1,
-                borderColor: colors.border,
+                borderColor: mood.accent,
                 borderRadius: 8,
-                gap: 8,
+                gap: 12,
                 opacity: unlocked ? 1 : 0.65,
-                backgroundColor: colors.surfaceSoft,
+                backgroundColor: colors.surface,
               }}
             >
-              <Text style={styles.heading}>
-                Reflection
-              </Text>
+              <View style={styles.row}>
+                <Text style={styles.heading}>Reflection</Text>
+                <Text style={styles.subtle}>
+                  {bossIntegrated ? 'Integrated' : 'Waiting'}
+                </Text>
+              </View>
 
               <Image
                 source={getBossAsset(boss.id, 'portrait')}
                 style={{
                   width: '100%',
-                  height: 220,
+                  height: 230,
                   borderRadius: 8,
-                  backgroundColor: 'rgba(255,255,255,0.04)',
+                  backgroundColor: colors.surfaceSoft,
                 }}
                 resizeMode="contain"
               />
@@ -163,13 +183,12 @@ export default function RoomScreen() {
               <Text style={styles.body}>
                 {boss.description}
               </Text>
-              <Text style={styles.body}>
-                Represents: {boss.represents}
-              </Text>
+              <View style={[styles.dividerRow, { gap: 6 }]}>
+                <Text style={styles.eyebrow}>Represents</Text>
+                <Text style={styles.body}>{boss.represents}</Text>
+              </View>
 
-              <Text style={styles.heading}>
-                Readiness Requirements
-              </Text>
+              <Text style={styles.heading}>Readiness Requirements</Text>
 
               {Object.entries(boss.requiredStats).length === 0 ? (
                 <Text style={styles.subtle}>-</Text>
@@ -177,7 +196,14 @@ export default function RoomScreen() {
                 Object.entries(boss.requiredStats).map(([statId, required]) => (
                   <View
                     key={statId}
-                    style={styles.row}
+                    style={[
+                      styles.row,
+                      {
+                        paddingTop: 6,
+                        borderTopWidth: 1,
+                        borderTopColor: colors.border,
+                      },
+                    ]}
                   >
                     <Text style={styles.body}>
                       {getStatName(statId as keyof typeof player.stats)}
@@ -199,13 +225,13 @@ export default function RoomScreen() {
             style={{
               padding: 14,
               borderWidth: 1,
-              borderColor: colors.border,
+              borderColor: colors.borderStrong,
               borderRadius: 8,
-              gap: 10,
-              backgroundColor: colors.surfaceSoft,
+              gap: 12,
+              backgroundColor: colors.surface,
             }}
           >
-            <Text style={styles.heading}>Room Actions</Text>
+            <Text style={styles.heading}>Next Step</Text>
 
             <Pressable
               disabled={!unlocked}

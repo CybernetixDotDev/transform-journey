@@ -7,7 +7,7 @@ import { getRoomById } from '../../src/domain/rooms';
 import { getStatName, STAT_IDS } from '../../src/domain/stats';
 import type { StatId } from '../../src/domain/types';
 import { usePlayerStore } from '../../src/state/usePlayerStore';
-import { colors, styles } from '../../src/ui/theme';
+import { colors, roomMoods, styles } from '../../src/ui/theme';
 
 const statOrder: readonly StatId[] = STAT_IDS;
 
@@ -27,14 +27,25 @@ export default function HomeScreen() {
     () => (player.unlockedRooms[0] ? getRoomById(player.unlockedRooms[0]) : null),
     [player.unlockedRooms]
   );
+  const currentRoomMood = firstUnlockedRoom
+    ? {
+        borderColor: roomMoods[firstUnlockedRoom.id].accent,
+        backgroundColor: roomMoods[firstUnlockedRoom.id].glow,
+      }
+    : undefined;
 
   if (!player.archetypeId) {
     return (
-      <ScrollView contentContainerStyle={styles.screen}>
-        <Text style={styles.eyebrow}>Quiet cosmic archive</Text>
-        <Text style={styles.title}>Akashic Library</Text>
+      <ScrollView contentContainerStyle={[styles.screen, { paddingBottom: 28 }]}>
+        <View style={[styles.heroPanel, { alignItems: 'center' }]}>
+          <Text style={styles.eyebrow}>Quiet cosmic archive</Text>
+          <Text style={[styles.title, { textAlign: 'center' }]}>Akashic Library</Text>
+          <Text style={[styles.body, { textAlign: 'center' }]}>
+            A symbolic archive of rooms, rituals, and reflections.
+          </Text>
+        </View>
 
-        <View style={styles.panelRaised}>
+        <View style={styles.accentPanel}>
           <Text style={styles.heading}>The first door is waiting</Text>
           <Text style={styles.body}>
             Begin the Soul Scan to receive your archetype and open the first room
@@ -60,11 +71,17 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.screen}>
-      <Text style={styles.eyebrow}>Archive index</Text>
-      <Text style={styles.title}>Akashic Library</Text>
+    <ScrollView contentContainerStyle={[styles.screen, { paddingBottom: 28 }]}>
+      <View style={[styles.heroPanel, { gap: 12 }]}>
+        <Text style={styles.eyebrow}>Archive index</Text>
+        <Text style={styles.title}>Akashic Library</Text>
+        <Text style={styles.body}>
+          Your path through the archive is saved locally as rooms open and
+          reflections integrate.
+        </Text>
+      </View>
 
-      <View style={styles.panelRaised}>
+      <View style={styles.accentPanel}>
         <Text style={styles.eyebrow}>Soul Scan</Text>
         <Text style={[styles.heading, { fontSize: 22 }]}>
           {archetype?.name ?? player.archetypeId}
@@ -75,19 +92,31 @@ export default function HomeScreen() {
         </Text>
       </View>
 
-      <View style={styles.panel}>
+      <View style={[styles.panel, { gap: 10 }]}>
         <Text style={styles.heading}>Inner Measures</Text>
 
         {statOrder.map((id) => (
-          <View key={id} style={styles.row}>
+          <View
+            key={id}
+            style={[
+              styles.row,
+              {
+                paddingTop: 6,
+                borderTopWidth: 1,
+                borderTopColor: colors.border,
+              },
+            ]}
+          >
             <Text style={styles.body}>{getStatName(id)}</Text>
-            <Text style={styles.statText}>{player.stats[id]}</Text>
+            <Text style={[styles.statText, { color: colors.accentStrong }]}>
+              {player.stats[id]}
+            </Text>
           </View>
         ))}
       </View>
 
-      <View style={styles.panel}>
-        <Text style={styles.heading}>Current Threshold</Text>
+      <View style={[styles.panelRaised, currentRoomMood]}>
+        <Text style={styles.heading}>Open Threshold</Text>
         {firstUnlockedRoom ? (
           <>
             <Text style={[styles.heading, { color: colors.accentStrong }]}>
@@ -105,11 +134,13 @@ export default function HomeScreen() {
         )}
       </View>
 
-      <View style={styles.panel}>
+      <View style={[styles.panel, { gap: 10 }]}>
         <Text style={styles.heading}>Journey Record</Text>
         <View style={styles.row}>
           <Text style={styles.body}>Ascension XP</Text>
-          <Text style={styles.statText}>{player.ascensionPoints}</Text>
+          <Text style={[styles.statText, { color: colors.success }]}>
+            {player.ascensionPoints}
+          </Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.body}>Open rooms</Text>

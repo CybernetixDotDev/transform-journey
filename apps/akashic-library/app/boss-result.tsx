@@ -51,44 +51,92 @@ export default function BossResultScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.screen}>
-      <Text style={styles.eyebrow}>Integration complete</Text>
-      <Text style={styles.title}>Reflection Integrated</Text>
-
-      <View style={styles.panelRaised}>
-        <Text style={[styles.heading, { color: colors.accentStrong }]}>
-          {boss ? `${boss.title} - ${boss.name}` : result.bossId}
+    <ScrollView
+      contentContainerStyle={[
+        styles.screen,
+        {
+          paddingBottom: 28,
+        },
+      ]}
+    >
+      <View style={{ gap: 8, alignItems: 'center' }}>
+        <Text style={styles.eyebrow}>Integration complete</Text>
+        <Text style={[styles.title, { textAlign: 'center' }]}>
+          Reflection Integrated
         </Text>
+        <Text style={[styles.body, { textAlign: 'center' }]}>
+          A part of the inner archive has been met and carried forward.
+        </Text>
+      </View>
+
+      <View
+        style={[
+          styles.panelRaised,
+          {
+            gap: 12,
+            borderColor: colors.accent,
+            backgroundColor: 'rgba(185, 167, 255, 0.16)',
+          },
+        ]}
+      >
+        <Text style={styles.eyebrow}>Reflection record</Text>
+        <View style={{ gap: 6 }}>
+          <Text style={[styles.heading, { color: colors.accentStrong }]}>
+            {boss ? boss.title : result.bossId}
+          </Text>
+          {boss && <Text style={styles.subtle}>{boss.name}</Text>}
+        </View>
+
         <Text style={styles.body}>
           {boss
             ? `You integrated ${boss.title} and carried its reflection forward.`
             : 'You integrated the reflection and carried it forward.'}
         </Text>
-        {boss && <Text style={styles.body}>Reflection: {boss.represents}</Text>}
-        <Text style={styles.statText}>XP gained: {result.rewardXP}</Text>
-        <Text style={styles.subtle}>
-          Completed: {result.completedAt}
-        </Text>
+
+        {boss && (
+          <View style={[styles.dividerRow, { gap: 6 }]}>
+            <Text style={styles.eyebrow}>Represents</Text>
+            <Text style={styles.body}>{boss.represents}</Text>
+          </View>
+        )}
+
+        <View style={styles.row}>
+          <Text style={styles.body}>XP gained</Text>
+          <Text style={[styles.statText, { color: colors.success }]}>
+            +{result.rewardXP}
+          </Text>
+        </View>
+
+        <Text style={styles.subtle}>Completed: {result.completedAt}</Text>
       </View>
 
-      <View style={styles.panel}>
-        <Text style={styles.heading}>Progression</Text>
+      <View style={[styles.panel, { gap: 12 }]}>
+        <Text style={styles.heading}>
+          {unlockedRoom ? 'A New Room Opens' : 'Journey State'}
+        </Text>
         {unlockedRoom ? (
           <>
-            <Text style={styles.body}>Next room unlocked</Text>
             <Text style={[styles.heading, { color: colors.success }]}>
               {unlockedRoom.name}
             </Text>
             <Text style={styles.body}>{unlockedRoom.description}</Text>
+            <Text style={styles.subtle}>
+              You can enter now or return to the map to review the archive.
+            </Text>
           </>
         ) : (
-          <View style={{ gap: 6 }}>
-            <Text style={styles.heading}>
+          <View style={{ gap: 8 }}>
+            <Text
+              style={[
+                styles.heading,
+                { color: result.isEndOfV1 ? colors.gold : colors.text },
+              ]}
+            >
               {result.isEndOfV1 ? 'Current journey complete' : 'No new room unlocked'}
             </Text>
             <Text style={styles.body}>
               {result.isEndOfV1
-                ? 'You have completed the V1 path. Return to the map to review your progress or reset when you want to begin again.'
+                ? 'You have completed the V1 path. The archive is quiet for now; return to the map to review your progress or restart when you are ready.'
                 : 'Return to the map to continue reviewing your progress.'}
             </Text>
           </View>

@@ -101,6 +101,22 @@ export const styles = StyleSheet.create({
     gap: spacing.tight,
     backgroundColor: colors.surfaceRaised,
   },
+  heroPanel: {
+    padding: 18,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 8,
+    gap: 10,
+    backgroundColor: colors.surfaceRaised,
+  },
+  accentPanel: {
+    padding: spacing.panel,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    borderRadius: 8,
+    gap: spacing.tight,
+    backgroundColor: 'rgba(185, 167, 255, 0.14)',
+  },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',

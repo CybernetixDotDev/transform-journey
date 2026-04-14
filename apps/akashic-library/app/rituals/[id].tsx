@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { Alert, Animated, Pressable, ScrollView, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import type { RoomId } from '../../src/domain/types';
@@ -22,6 +22,8 @@ export default function RitualScreen() {
   );
 
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
+  const [isResolving, setIsResolving] = useState(false);
+  const contentFade = useRef(new Animated.Value(1)).current;
 
   if (!roomId || !ritual) {
     return (
@@ -41,89 +43,150 @@ export default function RitualScreen() {
     ritual.choices.find((choice) => choice.id === selectedChoiceId) ?? null;
 
   const handleResolveRitual = () => {
+    if (isResolving) return;
+
     if (!selectedChoice) {
       Alert.alert('Choose a path', 'Select one ritual choice before continuing.');
       return;
     }
 
-    completeRitual({
-      roomId,
-      ritualId: ritual.id,
-      choiceId: selectedChoice.id,
-      effects: selectedChoice.effects,
-    });
+    setIsResolving(true);
 
-    router.replace({
-      pathname: '/ritual-result',
-      params: { roomId },
+    Animated.sequence([
+      Animated.delay(220),
+      Animated.timing(contentFade, {
+        toValue: 0,
+        duration: 260,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      completeRitual({
+        roomId,
+        ritualId: ritual.id,
+        choiceId: selectedChoice.id,
+        effects: selectedChoice.effects,
+      });
+
+      router.replace({
+        pathname: '/ritual-result',
+        params: { roomId },
+      });
     });
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.screen}>
-      <Text style={styles.eyebrow}>Ritual chamber</Text>
-      <Text style={styles.title}>{ritual.name}</Text>
-      <Text style={styles.body}>{ritual.description}</Text>
+    <ScrollView
+      contentContainerStyle={[
+        styles.screen,
+        {
+          paddingBottom: 28,
+        },
+      ]}
+    >
+      <Animated.View style={{ gap: 14, opacity: contentFade }}>
+        <View style={{ gap: 8 }}>
+          <Text style={styles.eyebrow}>Ritual chamber</Text>
+          <Text style={styles.title}>{ritual.name}</Text>
+          <Text style={styles.body}>{ritual.description}</Text>
+        </View>
 
-      <View style={styles.panel}>
-        <Text style={styles.heading}>Current Stats</Text>
-        {STATS.map((stat) => (
-          <View key={stat.id} style={styles.row}>
-            <Text style={styles.body}>{stat.name}</Text>
-            <Text style={styles.statText}>{player.stats[stat.id]}</Text>
-          </View>
-        ))}
-      </View>
+        <View style={styles.panel}>
+          <Text style={styles.heading}>Current Stats</Text>
+          {STATS.map((stat) => (
+            <View key={stat.id} style={styles.row}>
+              <Text style={styles.body}>{stat.name}</Text>
+              <Text style={styles.statText}>{player.stats[stat.id]}</Text>
+            </View>
+          ))}
+        </View>
 
-      <View style={{ gap: 10 }}>
-        <Text style={styles.heading}>Choose your approach</Text>
+        <View style={{ gap: 10 }}>
+          <Text style={styles.heading}>Choose your approach</Text>
 
-        {ritual.choices.map((choice) => {
-          const selected = choice.id === selectedChoiceId;
+          {ritual.choices.map((choice) => {
+            const selected = choice.id === selectedChoiceId;
+            const dimmed = Boolean(selectedChoiceId) && !selected;
 
-          return (
-            <Pressable
-              key={choice.id}
-              onPress={() => setSelectedChoiceId(choice.id)}
-              style={[
-                styles.panelRaised,
-                selected && {
-                  borderColor: colors.accent,
-                  backgroundColor: 'rgba(185, 167, 255, 0.18)',
-                },
-              ]}
-            >
-              <Text style={[styles.heading, selected && { color: colors.accentStrong }]}>
-                {choice.label}
-              </Text>
-              <Text style={styles.body}>{choice.description}</Text>
-
-              <View style={{ gap: 2 }}>
-                <Text style={styles.heading}>Effects</Text>
-                {Object.entries(choice.effects).map(([statId, delta]) => (
-                  <Text key={statId} style={styles.body}>
-                    {getStatName(statId as keyof typeof choice.effects)}: +{delta}
+            return (
+              <Pressable
+                key={choice.id}
+                onPress={() => {
+                  if (!isResolving) setSelectedChoiceId(choice.id);
+                }}
+                disabled={isResolving}
+                style={[
+                  styles.panelRaised,
+                  {
+                    gap: 12,
+                    opacity: dimmed ? 0.62 : 1,
+                  },
+                  selected && {
+                    borderColor: colors.accentStrong,
+                    backgroundColor: 'rgba(185, 167, 255, 0.24)',
+                  },
+                ]}
+              >
+                <View style={styles.row}>
+                  <Text
+                    style={[
+                      styles.heading,
+                      selected && { color: colors.accentStrong },
+                    ]}
+                  >
+                    {choice.label}
                   </Text>
-                ))}
-              </View>
-            </Pressable>
-          );
-        })}
-      </View>
+                  {selected && <Text style={styles.subtle}>Chosen</Text>}
+                </View>
+
+                <Text style={styles.body}>{choice.description}</Text>
+
+                <View
+                  style={[
+                    styles.panel,
+                    {
+                      backgroundColor: colors.surfaceSoft,
+                      gap: 6,
+                    },
+                  ]}
+                >
+                  <Text style={styles.eyebrow}>Effects</Text>
+                  {Object.entries(choice.effects).map(([statId, delta]) => (
+                    <View key={statId} style={styles.row}>
+                      <Text style={styles.body}>
+                        {getStatName(statId as keyof typeof choice.effects)}
+                      </Text>
+                      <Text style={[styles.statText, { color: colors.success }]}>
+                        +{delta}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+
+                {selected && isResolving && (
+                  <Text style={styles.subtle}>Sealing the ritual...</Text>
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
+      </Animated.View>
 
       <Pressable
         onPress={handleResolveRitual}
         style={[
           styles.button,
           styles.buttonPrimary,
-          { opacity: selectedChoice ? 1 : 0.6 },
+          { opacity: selectedChoice && !isResolving ? 1 : 0.6 },
         ]}
       >
-        <Text style={styles.buttonTextAccent}>Resolve Ritual</Text>
+        <Text style={styles.buttonTextAccent}>
+          {isResolving ? 'Sealing Ritual...' : 'Resolve Ritual'}
+        </Text>
       </Pressable>
 
       <Pressable
         onPress={() => router.back()}
+        disabled={isResolving}
         style={styles.button}
       >
         <Text style={styles.buttonText}>Back</Text>

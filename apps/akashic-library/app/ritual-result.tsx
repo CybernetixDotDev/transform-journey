@@ -34,16 +34,34 @@ export default function RitualResultScreen() {
   });
 
   return (
-    <ScrollView contentContainerStyle={styles.screen}>
-      <Text style={styles.eyebrow}>Ritual record</Text>
-      <Text style={styles.title}>Ritual Complete</Text>
+    <ScrollView
+      contentContainerStyle={[
+        styles.screen,
+        {
+          paddingBottom: 28,
+        },
+      ]}
+    >
+      <View style={{ gap: 8, alignItems: 'center' }}>
+        <Text style={styles.eyebrow}>Ritual record</Text>
+        <Text style={[styles.title, { textAlign: 'center' }]}>Ritual Complete</Text>
 
-      <Text style={styles.body}>
-        Your chosen path has altered your inner balance.
-      </Text>
+        <Text style={[styles.body, { textAlign: 'center' }]}>
+          Your chosen path has altered your inner balance.
+        </Text>
+      </View>
 
-      <View style={styles.panelRaised}>
-        <Text style={styles.heading}>Changed Stats</Text>
+      <View
+        style={[
+          styles.panelRaised,
+          {
+            gap: 12,
+            borderColor: colors.accent,
+            backgroundColor: 'rgba(185, 167, 255, 0.16)',
+          },
+        ]}
+      >
+        <Text style={styles.heading}>What Shifted</Text>
 
         {changedStats.length > 0 ? (
           changedStats.map((statId) => {
@@ -55,25 +73,45 @@ export default function RitualResultScreen() {
             return (
               <View
                 key={statId}
-                style={[styles.dividerRow, { gap: 4 }]}
+                style={[
+                  styles.dividerRow,
+                  {
+                    gap: 6,
+                  },
+                ]}
               >
-                <Text style={styles.heading}>{getStatName(key)}</Text>
+                <View style={styles.row}>
+                  <Text style={styles.heading}>{getStatName(key)}</Text>
+                  <Text style={[styles.statText, { color: colors.success }]}>
+                    {delta > 0 ? `+${delta}` : delta}
+                  </Text>
+                </View>
                 <Text style={styles.body}>
-                  {beforeValue} to {afterValue} {delta > 0 ? `(+${delta})` : `(${delta})`}
+                  {beforeValue} to {afterValue}
                 </Text>
               </View>
             );
           })
         ) : (
-          <Text style={styles.body}>No stat changes recorded.</Text>
+          <Text style={styles.body}>No visible stat changes were recorded.</Text>
         )}
       </View>
 
-      <View style={styles.panel}>
+      <View style={[styles.panel, { gap: 10 }]}>
         <Text style={styles.heading}>Current Totals</Text>
 
         {Object.entries(result.after).map(([statId, value]) => (
-          <View key={statId} style={styles.row}>
+          <View
+            key={statId}
+            style={[
+              styles.row,
+              {
+                paddingTop: 6,
+                borderTopWidth: 1,
+                borderTopColor: colors.border,
+              },
+            ]}
+          >
             <Text style={styles.body}>
               {getStatName(statId as keyof typeof result.after)}
             </Text>
@@ -83,6 +121,10 @@ export default function RitualResultScreen() {
           </View>
         ))}
       </View>
+
+      <Text style={[styles.subtle, { textAlign: 'center' }]}>
+        Return to the room when you are ready to approach the reflection.
+      </Text>
 
       <Pressable
         onPress={() => {
