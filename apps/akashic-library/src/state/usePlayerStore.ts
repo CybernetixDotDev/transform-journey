@@ -16,6 +16,7 @@ import { canChallengeBoss } from '../engine/BossEngine';
 import { completeRitual as resolveRitual } from '../engine/RitualEngine';
 import {
   getUnlockedRoomAfterBoss,
+  getNextRoomToUnlock,
   unlockNextRoomAfterBoss,
   unlockRoom as resolveUnlockRoom,
 } from '../engine/UnlockEngine';
@@ -41,6 +42,7 @@ export type BossResult = {
   roomId: RoomId;
   rewardXP: number;
   unlockedRoomId: RoomId | null;
+  isEndOfV1: boolean;
   completedAt: string;
 };
 
@@ -215,6 +217,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
           roomId: boss.roomId,
           rewardXP: safeReward,
           unlockedRoomId: getUnlockedRoomAfterBoss(player, nextPlayer),
+          isEndOfV1: getNextRoomToUnlock(boss.roomId) === null,
           completedAt,
         };
 

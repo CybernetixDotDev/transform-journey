@@ -44,8 +44,9 @@ const createPlayer = (overrides: Partial<PlayerState> = {}): PlayerState => ({
 
 const firstBoss = BOSSES.find((boss) => boss.id === 'ghost');
 const secondBoss = BOSSES.find((boss) => boss.id === 'critic');
+const finalBoss = BOSSES.find((boss) => boss.id === 'scarcity_beast');
 
-if (!firstBoss || !secondBoss) {
+if (!firstBoss || !secondBoss || !finalBoss) {
   throw new Error('Expected V1 boss definitions to exist.');
 }
 
@@ -200,6 +201,76 @@ describe('usePlayerStore', () => {
       roomId: 'hall_of_echoes',
       rewardXP: secondBoss.rewardXP,
       unlockedRoomId: 'scarcity_vault',
+    });
+  });
+
+  it('completes the Scarcity Vault loop without unlocking another room', () => {
+    const player = createPlayer({
+      unlockedRooms: ['shadow_mirror_hall', 'hall_of_echoes', 'scarcity_vault'],
+      defeatedBosses: ['ghost', 'critic'],
+      ascensionPoints: firstBoss.rewardXP + secondBoss.rewardXP,
+      stats: {
+        ...DEFAULT_STATS,
+        courage: 3,
+        clarity: 4,
+        compassion: 8,
+        discipline: 2,
+        selfWorth: 2,
+      },
+      ritualHistory: [
+        {
+          id: 'first-room-ritual',
+          roomId: 'shadow_mirror_hall',
+          completedAt: todayIso(),
+        },
+        {
+          id: 'second-room-ritual',
+          roomId: 'hall_of_echoes',
+          completedAt: todayIso(),
+        },
+      ],
+    });
+    setStorePlayer(player);
+
+    usePlayerStore.getState().completeRitual({
+      roomId: 'scarcity_vault',
+      effects: {
+        selfWorth: 2,
+        compassion: 1,
+      },
+    });
+
+    expect(
+      canChallengeBoss(
+        usePlayerStore.getState().player,
+        'scarcity_vault',
+        finalBoss
+      ).ok
+    ).toBe(true);
+
+    const defeated = usePlayerStore.getState().defeatBoss('scarcity_beast');
+    const state = usePlayerStore.getState();
+
+    expect(defeated).toBe(true);
+    expect(state.player.ascensionPoints).toBe(
+      firstBoss.rewardXP + secondBoss.rewardXP + finalBoss.rewardXP
+    );
+    expect(state.player.defeatedBosses).toEqual([
+      'ghost',
+      'critic',
+      'scarcity_beast',
+    ]);
+    expect(state.player.unlockedRooms).toEqual([
+      'shadow_mirror_hall',
+      'hall_of_echoes',
+      'scarcity_vault',
+    ]);
+    expect(state.lastBossResult).toMatchObject({
+      bossId: 'scarcity_beast',
+      roomId: 'scarcity_vault',
+      rewardXP: finalBoss.rewardXP,
+      unlockedRoomId: null,
+      isEndOfV1: true,
     });
   });
 

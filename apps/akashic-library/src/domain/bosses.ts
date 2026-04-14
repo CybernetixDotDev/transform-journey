@@ -33,7 +33,7 @@ export const BOSSES: readonly BossDefinition[] = [
     description: 'A keeper of narrowed futures and inherited lack.',
     requiredStats: {
       selfWorth: 4,
-      discipline: 4,
+      discipline: 2,
     },
     rewardXP: 45,
   },

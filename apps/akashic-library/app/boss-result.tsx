@@ -10,6 +10,7 @@ export default function BossResultScreen() {
 
   const result = usePlayerStore((state) => state.lastBossResult);
   const clear = usePlayerStore((state) => state.clearLastBossResult);
+  const reset = usePlayerStore((state) => state.reset);
 
   if (!result) {
     return (
@@ -90,7 +91,16 @@ export default function BossResultScreen() {
             <Text style={{ opacity: 0.75 }}>{unlockedRoom.description}</Text>
           </>
         ) : (
-          <Text>No new room unlocked.</Text>
+          <View style={{ gap: 6 }}>
+            <Text style={{ fontSize: 18, fontWeight: '700' }}>
+              {result.isEndOfV1 ? 'Current journey complete' : 'No new room unlocked'}
+            </Text>
+            <Text style={{ opacity: 0.75 }}>
+              {result.isEndOfV1
+                ? 'You have completed the V1 path. Return to the map to review your progress or reset when you want to begin again.'
+                : 'Return to the map to continue reviewing your progress.'}
+            </Text>
+          </View>
         )}
       </View>
 
@@ -124,6 +134,24 @@ export default function BossResultScreen() {
           }}
         >
           <Text style={{ fontWeight: '700' }}>Return to Map</Text>
+        </Pressable>
+      )}
+
+      {result.isEndOfV1 && (
+        <Pressable
+          onPress={() => {
+            clear();
+            void reset().then(() => router.replace('/(tabs)'));
+          }}
+          style={{
+            paddingVertical: 12,
+            paddingHorizontal: 14,
+            borderRadius: 12,
+            borderWidth: 1,
+            alignItems: 'center',
+          }}
+        >
+          <Text style={{ fontWeight: '700' }}>Restart Journey</Text>
         </Pressable>
       )}
     </ScrollView>
