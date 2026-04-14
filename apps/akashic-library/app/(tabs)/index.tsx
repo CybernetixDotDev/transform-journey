@@ -1,98 +1,182 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useMemo } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { getArchetypeById } from '../../src/domain/archetypes';
+import { getRoomById } from '../../src/domain/rooms';
+import { getStatName, STAT_IDS } from '../../src/domain/stats';
+import type { StatId } from '../../src/domain/types';
+import { usePlayerStore } from '../../src/state/usePlayerStore';
+import { colors, roomMoods, styles } from '../../src/ui/theme';
+
+const statOrder: readonly StatId[] = STAT_IDS;
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const router = useRouter();
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const player = usePlayerStore((state) => state.player);
+
+  const reset = usePlayerStore((state) => state.reset);
+
+  const archetype = useMemo(
+    () => getArchetypeById(player.archetypeId),
+    [player.archetypeId]
+  );
+
+  const firstUnlockedRoom = useMemo(
+    () => (player.unlockedRooms[0] ? getRoomById(player.unlockedRooms[0]) : null),
+    [player.unlockedRooms]
+  );
+  const currentRoomMood = firstUnlockedRoom
+    ? {
+        borderColor: roomMoods[firstUnlockedRoom.id].accent,
+        backgroundColor: roomMoods[firstUnlockedRoom.id].glow,
+      }
+    : undefined;
+
+  if (!player.archetypeId) {
+    return (
+      <ScrollView contentContainerStyle={[styles.screen, { paddingBottom: 28 }]}>
+        <View style={[styles.heroPanel, { alignItems: 'center' }]}>
+          <Text style={styles.eyebrow}>Quiet cosmic archive</Text>
+          <Text style={[styles.title, { textAlign: 'center' }]}>Akashic Library</Text>
+          <Text style={[styles.body, { textAlign: 'center' }]}>
+            A symbolic archive of rooms, rituals, and reflections.
+          </Text>
+        </View>
+
+        <View style={styles.accentPanel}>
+          <Text style={styles.heading}>The first door is waiting</Text>
+          <Text style={styles.body}>
+            Begin the Soul Scan to receive your archetype and open the first room
+            in the archive.
+          </Text>
+
+          <ActionButton
+            label="Begin Soul Scan"
+            onPress={() => router.push('/soul-scan')}
+            primary
+          />
+
+          <Text style={styles.subtle}>
+            This experience is reflective and symbolic, not therapeutic.
+          </Text>
+        </View>
+
+        <Text style={styles.subtle}>
+          Progress is saved locally on this device.
+        </Text>
+      </ScrollView>
+    );
+  }
+
+  return (
+    <ScrollView contentContainerStyle={[styles.screen, { paddingBottom: 28 }]}>
+      <View style={[styles.heroPanel, { gap: 12 }]}>
+        <Text style={styles.eyebrow}>Archive index</Text>
+        <Text style={styles.title}>Akashic Library</Text>
+        <Text style={styles.body}>
+          Your path through the archive is saved locally as rooms open and
+          reflections integrate.
+        </Text>
+      </View>
+
+      <View style={styles.accentPanel}>
+        <Text style={styles.eyebrow}>Soul Scan</Text>
+        <Text style={[styles.heading, { fontSize: 22 }]}>
+          {archetype?.name ?? player.archetypeId}
+        </Text>
+        {archetype && <Text style={styles.body}>{archetype.description}</Text>}
+        <Text style={styles.subtle}>
+          Last saved locally: {new Date(player.updatedAt).toLocaleString()}
+        </Text>
+      </View>
+
+      <View style={[styles.panel, { gap: 10 }]}>
+        <Text style={styles.heading}>Inner Measures</Text>
+
+        {statOrder.map((id) => (
+          <View
+            key={id}
+            style={[
+              styles.row,
+              {
+                paddingTop: 6,
+                borderTopWidth: 1,
+                borderTopColor: colors.border,
+              },
+            ]}
+          >
+            <Text style={styles.body}>{getStatName(id)}</Text>
+            <Text style={[styles.statText, { color: colors.accentStrong }]}>
+              {player.stats[id]}
+            </Text>
+          </View>
+        ))}
+      </View>
+
+      <View style={[styles.panelRaised, currentRoomMood]}>
+        <Text style={styles.heading}>Open Threshold</Text>
+        {firstUnlockedRoom ? (
+          <>
+            <Text style={[styles.heading, { color: colors.accentStrong }]}>
+              {firstUnlockedRoom.name}
+            </Text>
+            <Text style={styles.body}>{firstUnlockedRoom.description}</Text>
+            <ActionButton
+              label="Enter Room"
+              onPress={() => router.push(`/room/${firstUnlockedRoom.id}`)}
+              primary
+            />
+          </>
+        ) : (
+          <Text style={styles.body}>No room is unlocked yet.</Text>
+        )}
+      </View>
+
+      <View style={[styles.panel, { gap: 10 }]}>
+        <Text style={styles.heading}>Journey Record</Text>
+        <View style={styles.row}>
+          <Text style={styles.body}>Ascension XP</Text>
+          <Text style={[styles.statText, { color: colors.success }]}>
+            {player.ascensionPoints}
+          </Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.body}>Open rooms</Text>
+          <Text style={styles.statText}>{player.unlockedRooms.length}</Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.body}>Integrated reflections</Text>
+          <Text style={styles.statText}>{player.defeatedBosses.length}</Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.body}>Rituals completed</Text>
+          <Text style={styles.statText}>{player.ritualHistory.length}</Text>
+        </View>
+      </View>
+
+      <ActionButton label="Open Map" onPress={() => router.push('/(tabs)/explore')} />
+      <ActionButton label="Restart Journey" onPress={() => void reset()} />
+    </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+function ActionButton({
+  label,
+  onPress,
+  primary = false,
+}: {
+  label: string;
+  onPress: () => void;
+  primary?: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[styles.button, primary && styles.buttonPrimary, { alignSelf: 'flex-start' }]}
+    >
+      <Text style={primary ? styles.buttonTextAccent : styles.buttonText}>{label}</Text>
+    </Pressable>
+  );
+}
