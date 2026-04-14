@@ -1,28 +1,43 @@
-import type { RoomId, RoomDefinition } from './types';
+import type { RoomDefinition, RoomId } from './types';
 
 export const ROOMS: readonly RoomDefinition[] = [
   {
-    id: 'hall_of_echoes',
-    name: 'Hall of Echoes',
-    description: 'A chamber where old catalog chants still reverberate.',
-    bossId: 'critic',
-  },
-  {
     id: 'shadow_mirror_hall',
     name: 'Shadow Mirror Hall',
-    description: 'A reflective wing that returns altered versions of truth.',
+    theme: 'courage',
+    description: 'A reflective hall for facing avoided truths without force.',
     bossId: 'ghost',
+  },
+  {
+    id: 'hall_of_echoes',
+    name: 'Hall of Echoes',
+    theme: 'clarity',
+    description: 'A chamber where repeated patterns become easier to hear.',
+    bossId: 'critic',
+    requiredStatToUnlock: {
+      courage: 3,
+    },
   },
   {
     id: 'scarcity_vault',
     name: 'Scarcity Vault',
-    description: 'A sealed nexus storing records of distant futures.',
+    theme: 'selfWorth',
+    description: 'A sealed vault for loosening old contracts with lack.',
     bossId: 'scarcity_beast',
+    requiredStatToUnlock: {
+      clarity: 4,
+    },
   },
 ];
 
 export const ROOM_ORDER: readonly RoomId[] = [
-  'hall_of_echoes',
   'shadow_mirror_hall',
+  'hall_of_echoes',
   'scarcity_vault',
 ];
+
+export const FIRST_ROOM_ID: RoomId = ROOM_ORDER[0];
+
+export function getRoomById(id: RoomId): RoomDefinition | null {
+  return ROOMS.find((room) => room.id === id) ?? null;
+}

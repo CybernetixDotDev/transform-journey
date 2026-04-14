@@ -8,9 +8,8 @@ import { usePlayerStore } from '../src/state/usePlayerStore';
 export default function SoulScanScreen() {
   const router = useRouter();
 
-  const setArchetype = usePlayerStore((s) => s.setArchetype);
-  const unlockRoom = usePlayerStore((s) => s.unlockRoom);
-  const archetypeId = usePlayerStore((s) => s.player.archetypeId);
+  const completeSoulScan = usePlayerStore((state) => state.completeSoulScan);
+  const archetypeId = usePlayerStore((state) => state.player.archetypeId);
 
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
@@ -25,7 +24,7 @@ export default function SoulScanScreen() {
   const canSubmit = answeredCount === total;
 
   const selectedOptionIds = useMemo(
-    () => SOUL_SCAN_QUESTIONS.map((q) => answers[q.id]).filter(Boolean),
+    () => SOUL_SCAN_QUESTIONS.map((question) => answers[question.id]).filter(Boolean),
     [answers]
   );
 
@@ -36,11 +35,7 @@ export default function SoulScanScreen() {
   const onSubmit = () => {
     if (!canSubmit) return;
 
-    const result = runSoulScan(selectedOptionIds);
-
-    setArchetype(result.archetypeId, result.startingStats);
-    unlockRoom(result.firstRoomId);
-
+    completeSoulScan(runSoulScan(selectedOptionIds));
     router.replace('/(tabs)');
   };
 
@@ -48,7 +43,7 @@ export default function SoulScanScreen() {
     <ScrollView contentContainerStyle={{ padding: 18, gap: 16 }}>
       <Text style={{ fontSize: 26, fontWeight: '700' }}>Soul Scan</Text>
       <Text style={{ opacity: 0.75 }}>
-        Answer honestly. This is reflective and symbolic — not therapeutic.
+        Answer honestly. This is reflective and symbolic, not therapeutic.
       </Text>
 
       <View style={{ padding: 12, borderWidth: 1, borderRadius: 12 }}>
@@ -57,16 +52,19 @@ export default function SoulScanScreen() {
         </Text>
       </View>
 
-      {SOUL_SCAN_QUESTIONS.map((q) => (
-        <View key={q.id} style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 10 }}>
-          <Text style={{ fontSize: 16, fontWeight: '600' }}>{q.prompt}</Text>
+      {SOUL_SCAN_QUESTIONS.map((question) => (
+        <View
+          key={question.id}
+          style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 10 }}
+        >
+          <Text style={{ fontSize: 16, fontWeight: '600' }}>{question.prompt}</Text>
 
-          {q.options.map((o) => {
-            const selected = answers[q.id] === o.id;
+          {question.options.map((option) => {
+            const selected = answers[question.id] === option.id;
             return (
               <Pressable
-                key={o.id}
-                onPress={() => onSelect(q.id, o.id)}
+                key={option.id}
+                onPress={() => onSelect(question.id, option.id)}
                 style={{
                   paddingVertical: 10,
                   paddingHorizontal: 12,
@@ -75,7 +73,9 @@ export default function SoulScanScreen() {
                   opacity: selected ? 1 : 0.85,
                 }}
               >
-                <Text style={{ fontWeight: selected ? '700' : '500' }}>{o.label}</Text>
+                <Text style={{ fontWeight: selected ? '700' : '500' }}>
+                  {option.label}
+                </Text>
               </Pressable>
             );
           })}

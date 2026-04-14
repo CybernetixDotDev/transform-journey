@@ -7,12 +7,12 @@ export const PLAYER_STATE_STORAGE_KEY = 'akashic.playerState.v1';
 export async function loadPlayerState(): Promise<PlayerState | null> {
   try {
     const raw = await AsyncStorage.getItem(PLAYER_STATE_STORAGE_KEY);
+    if (!raw) return null;
 
-    if (!raw) {
-      return null;
-    }
+    const parsed = JSON.parse(raw) as Partial<PlayerState>;
+    if (parsed.version !== 1) return null;
 
-    return JSON.parse(raw) as PlayerState;
+    return parsed as PlayerState;
   } catch {
     return null;
   }

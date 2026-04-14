@@ -1,15 +1,15 @@
 export type StatId =
-  | 'might'
-  | 'insight'
-  | 'will'
-  | 'agility'
-  | 'attunement';
+  | 'courage'
+  | 'clarity'
+  | 'compassion'
+  | 'discipline'
+  | 'selfWorth';
 
-export type ArchetypeId = 'scribe' | 'warden' | 'seer';
+export type ArchetypeId = 'warrior' | 'seer' | 'alchemist';
 
 export type RoomId =
-  | 'hall_of_echoes'
   | 'shadow_mirror_hall'
+  | 'hall_of_echoes'
   | 'scarcity_vault';
 
 export type BossId =
@@ -29,14 +29,17 @@ export type ArchetypeDefinition = {
   id: ArchetypeId;
   name: string;
   description: string;
+  statBias: Partial<StatBlock>;
   startingStats: StatBlock;
 };
 
 export type RoomDefinition = {
   id: RoomId;
   name: string;
+  theme: StatId;
   description: string;
   bossId: BossId;
+  requiredStatToUnlock?: Partial<StatBlock>;
 };
 
 export type BossDefinition = {
@@ -45,39 +48,8 @@ export type BossDefinition = {
   name: string;
   title: string;
   description: string;
-
-  // V1 bosses are threshold gates (not full stat mirrors)
   requiredStats: Partial<StatBlock>;
   rewardXP: number;
-};
-
-export type RitualLogEntry = {
-  id: string; // simple unique id (we can use Date.now().toString() in V1)
-  roomId: RoomId;
-  bossId?: BossId; // optional: link ritual to boss attempt/defeat later
-  completedAt: string; // ISO timestamp
-};
-
-export type PlayerState = {
-  version: 1;
-
-  // timestamps as ISO strings = easy to store + debug
-  createdAt: string;
-  updatedAt: string;
-
-  // null until Soul Scan assigns it
-  archetypeId: ArchetypeId | null;
-
-  // core progression
-  stats: StatBlock;
-  ascensionPoints: number;
-
-  // world progression
-  unlockedRooms: RoomId[];
-  defeatedBosses: BossId[];
-
-  // activity history (V1 minimal)
-  ritualHistory: RitualLogEntry[];
 };
 
 export type RitualEffect = Partial<StatBlock>;
@@ -96,4 +68,24 @@ export type RitualDefinition = {
   description: string;
   choices: RitualChoice[];
   repeatable?: boolean;
+};
+
+export type RitualLogEntry = {
+  id: string;
+  roomId: RoomId;
+  bossId?: BossId;
+  ritualId?: string;
+  completedAt: string;
+};
+
+export type PlayerState = {
+  version: 1;
+  createdAt: string;
+  updatedAt: string;
+  archetypeId: ArchetypeId | null;
+  stats: StatBlock;
+  ascensionPoints: number;
+  unlockedRooms: RoomId[];
+  defeatedBosses: BossId[];
+  ritualHistory: RitualLogEntry[];
 };

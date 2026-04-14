@@ -2,31 +2,41 @@ import { useMemo } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import { usePlayerStore } from '../../src/state/usePlayerStore';
-import type { StatId } from '../../src/domain/types';
+import { getArchetypeById } from '../../src/domain/archetypes';
 import { BOSSES } from '../../src/domain/bosses';
-import { DEFAULT_STATS } from '../../src/domain/stats';
+import { getRoomById } from '../../src/domain/rooms';
+import { DEFAULT_STATS, getStatName, STAT_IDS } from '../../src/domain/stats';
+import type { StatId } from '../../src/domain/types';
+import { usePlayerStore } from '../../src/state/usePlayerStore';
 
-const statOrder: StatId[] = ['might', 'insight', 'will', 'agility', 'attunement'];
+const statOrder: readonly StatId[] = STAT_IDS;
 
 export default function HomeScreen() {
   const router = useRouter();
 
-  const player = usePlayerStore((s) => s.player);
+  const player = usePlayerStore((state) => state.player);
 
-  const setArchetype = usePlayerStore((s) => s.setArchetype);
-  const updateStat = usePlayerStore((s) => s.updateStat);
-  const addAscensionPoints = usePlayerStore((s) => s.addAscensionPoints);
-  const completeRitual = usePlayerStore((s) => s.completeRitual);
-  const defeatBoss = usePlayerStore((s) => s.defeatBoss);
-  const reset = usePlayerStore((s) => s.reset);
+  const setArchetype = usePlayerStore((state) => state.setArchetype);
+  const addAscensionPoints = usePlayerStore((state) => state.addAscensionPoints);
+  const completeRitual = usePlayerStore((state) => state.completeRitual);
+  const defeatBoss = usePlayerStore((state) => state.defeatBoss);
+  const reset = usePlayerStore((state) => state.reset);
+
+  const archetype = useMemo(
+    () => getArchetypeById(player.archetypeId),
+    [player.archetypeId]
+  );
+
+  const firstUnlockedRoom = useMemo(
+    () => (player.unlockedRooms[0] ? getRoomById(player.unlockedRooms[0]) : null),
+    [player.unlockedRooms]
+  );
 
   const lastRitual = useMemo(
     () => player.ritualHistory[player.ritualHistory.length - 1],
     [player.ritualHistory]
   );
 
-  // ---- Onboarding gate ----
   if (!player.archetypeId) {
     return (
       <ScrollView contentContainerStyle={{ padding: 18, gap: 14 }}>
@@ -44,14 +54,14 @@ export default function HomeScreen() {
           />
 
           <Text style={{ opacity: 0.6, fontSize: 12 }}>
-            This experience is reflective and symbolic — not therapeutic.
+            This experience is reflective and symbolic, not therapeutic.
           </Text>
         </View>
 
         <View style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 10 }}>
-          <Text style={{ fontSize: 16, fontWeight: '600' }}>Dev Controls</Text>
+          <Text style={{ fontSize: 16, fontWeight: '600' }}>Debug</Text>
           <Text style={{ opacity: 0.75 }}>
-            If you want to re-run onboarding or clear progress:
+            Reset clears local AsyncStorage-backed progress.
           </Text>
           <ActionButton label="Reset ALL state" onPress={() => void reset()} />
         </View>
@@ -59,53 +69,67 @@ export default function HomeScreen() {
     );
   }
 
-  // ---- Main V1 Control Room ----
   return (
     <ScrollView contentContainerStyle={{ padding: 18, gap: 14 }}>
       <Text style={{ fontSize: 26, fontWeight: '700' }}>Akashic Library</Text>
 
-      <View style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 6 }}>
-        <Text style={{ fontSize: 16, fontWeight: '600' }}>Player</Text>
-        <Text>Archetype: {player.archetypeId}</Text>
-        <Text>Ascension Points: {player.ascensionPoints}</Text>
-        <Text>Unlocked Rooms: {player.unlockedRooms.length}</Text>
-        <Text>Defeated Bosses: {player.defeatedBosses.length}</Text>
-        <Text>Rituals Completed: {player.ritualHistory.length}</Text>
-        <Text style={{ opacity: 0.7, fontSize: 12 }}>Updated: {player.updatedAt}</Text>
+      <View style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 8 }}>
+        <Text style={{ fontSize: 16, fontWeight: '600' }}>Soul Scan Result</Text>
+        <Text style={{ fontSize: 20, fontWeight: '700' }}>
+          {archetype?.name ?? player.archetypeId}
+        </Text>
+        {archetype && <Text style={{ opacity: 0.75 }}>{archetype.description}</Text>}
+        <Text style={{ opacity: 0.7, fontSize: 12 }}>
+          Saved locally: {player.updatedAt}
+        </Text>
       </View>
 
       <View style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 8 }}>
-        <Text style={{ fontSize: 16, fontWeight: '600' }}>Stats</Text>
+        <Text style={{ fontSize: 16, fontWeight: '600' }}>Initial Stats</Text>
 
         {statOrder.map((id) => (
           <View key={id} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text>{id}</Text>
+            <Text>{getStatName(id)}</Text>
             <Text>{player.stats[id]}</Text>
           </View>
         ))}
-
-        <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>
-          {statOrder.map((id) => (
-            <ActionButton key={id} label={`+1 ${id}`} onPress={() => updateStat(id, 1)} />
-          ))}
-        </View>
-
-        <ActionButton
-          label="Reset stats to 0"
-          onPress={() =>
-            setArchetype(player.archetypeId ?? 'scribe', { ...DEFAULT_STATS })
-          }
-        />
       </View>
 
       <View style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 10 }}>
-        <Text style={{ fontSize: 16, fontWeight: '600' }}>Actions (V1 Debug)</Text>
+        <Text style={{ fontSize: 16, fontWeight: '600' }}>First Room</Text>
+        {firstUnlockedRoom ? (
+          <>
+            <Text style={{ fontSize: 18, fontWeight: '700' }}>
+              {firstUnlockedRoom.name}
+            </Text>
+            <Text style={{ opacity: 0.75 }}>{firstUnlockedRoom.description}</Text>
+            <ActionButton
+              label="Enter First Room"
+              onPress={() => router.push(`/room/${firstUnlockedRoom.id}`)}
+            />
+          </>
+        ) : (
+          <Text style={{ opacity: 0.75 }}>No room is unlocked yet.</Text>
+        )}
+      </View>
+
+      <View style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 6 }}>
+        <Text style={{ fontSize: 16, fontWeight: '600' }}>Debug State</Text>
+        <Text>Archetype ID: {player.archetypeId}</Text>
+        <Text>Ascension Points: {player.ascensionPoints}</Text>
+        <Text>Unlocked Rooms: {player.unlockedRooms.join(', ') || '-'}</Text>
+        <Text>Defeated Bosses: {player.defeatedBosses.length}</Text>
+        <Text>Rituals Completed: {player.ritualHistory.length}</Text>
+      </View>
+
+      <View style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 10 }}>
+        <Text style={{ fontSize: 16, fontWeight: '600' }}>Debug Actions</Text>
 
         <ActionButton label="+10 Ascension Points" onPress={() => addAscensionPoints(10)} />
 
         <ActionButton
-          label="Complete ritual (hall_of_echoes)"
-          onPress={() => completeRitual({ roomId: 'hall_of_echoes' })}
+          label="Complete ritual (shadow_mirror_hall)"
+          onPress={() => completeRitual({ roomId: 'shadow_mirror_hall' })}
         />
 
         <ActionButton
@@ -118,8 +142,10 @@ export default function HomeScreen() {
 
         <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
           <ActionButton
-            label="Re-run Soul Scan"
-            onPress={() => router.push('/soul-scan')}
+            label="Reset stats to 0"
+            onPress={() =>
+              setArchetype(player.archetypeId ?? 'warrior', { ...DEFAULT_STATS })
+            }
           />
           <ActionButton label="Reset ALL state" onPress={() => void reset()} />
         </View>
@@ -128,7 +154,7 @@ export default function HomeScreen() {
       <View style={{ padding: 14, borderWidth: 1, borderRadius: 12, gap: 6 }}>
         <Text style={{ fontSize: 16, fontWeight: '600' }}>Last Ritual</Text>
         <Text>
-          {lastRitual ? `${lastRitual.roomId} @ ${lastRitual.completedAt}` : '—'}
+          {lastRitual ? `${lastRitual.roomId} @ ${lastRitual.completedAt}` : '-'}
         </Text>
       </View>
     </ScrollView>

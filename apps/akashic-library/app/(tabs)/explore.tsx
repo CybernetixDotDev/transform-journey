@@ -2,6 +2,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { ROOMS } from '../../src/domain/rooms';
+import { getRoomLockReasons } from '../../src/engine/UnlockEngine';
 import { usePlayerStore } from '../../src/state/usePlayerStore';
 
 export default function MapScreen() {
@@ -18,6 +19,7 @@ export default function MapScreen() {
 
       {ROOMS.map((room) => {
         const unlocked = player.unlockedRooms.includes(room.id);
+        const lockReasons = getRoomLockReasons(player, room.id);
 
         return (
           <View
@@ -32,6 +34,17 @@ export default function MapScreen() {
           >
             <Text style={{ fontSize: 16, fontWeight: '700' }}>{room.name}</Text>
             <Text style={{ opacity: 0.8 }}>{room.description}</Text>
+
+            {!unlocked && lockReasons.length > 0 && (
+              <View style={{ gap: 4 }}>
+                <Text style={{ fontWeight: '600' }}>Locked because:</Text>
+                {lockReasons.map((reason) => (
+                  <Text key={reason} style={{ opacity: 0.75 }}>
+                    - {reason}
+                  </Text>
+                ))}
+              </View>
+            )}
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Text style={{ fontWeight: '600' }}>

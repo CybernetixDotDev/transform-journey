@@ -2,40 +2,82 @@ import type { RitualDefinition } from './types';
 
 export const RITUALS: readonly RitualDefinition[] = [
   {
+    id: 'shadow_mirror_hall-mirror',
+    roomId: 'shadow_mirror_hall',
+    name: 'Mirror Ritual',
+    description:
+      'Stand before the mirror and choose one honest way to meet what appears.',
+    choices: [
+      {
+        id: 'name-the-shadow',
+        label: 'Name the shadow',
+        description: 'Give one avoided pattern a clear, simple name.',
+        effects: {
+          courage: 2,
+          clarity: 1,
+        },
+      },
+      {
+        id: 'soften-the-gaze',
+        label: 'Soften the gaze',
+        description: 'Stay with the reflection without turning it into a verdict.',
+        effects: {
+          compassion: 2,
+          courage: 1,
+        },
+      },
+    ],
+  },
+  {
     id: 'hall_of_echoes-reflection',
     roomId: 'hall_of_echoes',
     name: 'Ritual of Reflection',
     description:
-      'The echoes of the hall respond only to those who listen carefully. Choose how you approach the silence.',
+      'Listen for the repeated echo and choose how you will respond to it today.',
     choices: [
       {
         id: 'listen-deeply',
-        label: 'Listen to the echoes',
-        description:
-          'You quiet your thoughts and allow the chamber to reveal what it remembers.',
+        label: 'Listen deeply',
+        description: 'Quiet the noise and identify the pattern underneath it.',
         effects: {
-          insight: 2,
-          attunement: 1,
+          clarity: 2,
+          compassion: 1,
         },
       },
       {
-        id: 'speak-into-void',
-        label: 'Speak into the void',
-        description:
-          'You challenge the chamber with your own voice and will.',
+        id: 'answer-with-discipline',
+        label: 'Answer with discipline',
+        description: 'Choose one small action that breaks the repeated loop.',
         effects: {
-          will: 2,
-          might: 1,
+          discipline: 2,
+          clarity: 1,
+        },
+      },
+    ],
+  },
+  {
+    id: 'scarcity_vault-release',
+    roomId: 'scarcity_vault',
+    name: 'Vault Release Ritual',
+    description:
+      'Open one locked ledger and choose what no longer needs to define your worth.',
+    choices: [
+      {
+        id: 'return-the-ledger',
+        label: 'Return the ledger',
+        description: 'Release one old measure that made your value feel conditional.',
+        effects: {
+          selfWorth: 2,
+          compassion: 1,
         },
       },
       {
-        id: 'walk-the-perimeter',
-        label: 'Walk the perimeter',
-        description:
-          'You study the room, searching for patterns hidden in the architecture.',
+        id: 'choose-enough',
+        label: 'Choose enough',
+        description: 'Name one grounded sign that there is enough for the next step.',
         effects: {
-          insight: 1,
-          agility: 1,
+          selfWorth: 2,
+          discipline: 1,
         },
       },
     ],

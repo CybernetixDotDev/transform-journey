@@ -1,20 +1,14 @@
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { usePlayerStore } from '../src/state/usePlayerStore';
 
-const STAT_LABELS: Record<string, string> = {
-  might: 'Might',
-  insight: 'Insight',
-  will: 'Will',
-  agility: 'Agility',
-  attunement: 'Attunement',
-};
+import { getStatName } from '../src/domain/stats';
+import { usePlayerStore } from '../src/state/usePlayerStore';
 
 export default function RitualResultScreen() {
   const router = useRouter();
 
-  const result = usePlayerStore((s) => s.lastRitualResult);
-  const clear = usePlayerStore((s) => s.clearLastRitualResult);
+  const result = usePlayerStore((state) => state.lastRitualResult);
+  const clear = usePlayerStore((state) => state.clearLastRitualResult);
 
   if (!result) {
     return (
@@ -48,15 +42,15 @@ export default function RitualResultScreen() {
     );
   }
 
-  const changedStats = Object.keys(result.after).filter((stat) => {
-    const key = stat as keyof typeof result.after;
+  const changedStats = Object.keys(result.after).filter((statId) => {
+    const key = statId as keyof typeof result.after;
     return result.before[key] !== result.after[key];
   });
 
   return (
     <ScrollView contentContainerStyle={{ padding: 18, gap: 16 }}>
       <Text style={{ fontSize: 28, fontWeight: '700' }}>
-        Ritual Complete ✨
+        Ritual Complete
       </Text>
 
       <Text style={{ opacity: 0.8 }}>
@@ -74,24 +68,23 @@ export default function RitualResultScreen() {
         <Text style={{ fontSize: 16, fontWeight: '700' }}>Changed Stats</Text>
 
         {changedStats.length > 0 ? (
-          changedStats.map((stat) => {
-            const key = stat as keyof typeof result.after;
+          changedStats.map((statId) => {
+            const key = statId as keyof typeof result.after;
             const beforeValue = result.before[key];
             const afterValue = result.after[key];
             const delta = afterValue - beforeValue;
-            const label = STAT_LABELS[stat] ?? stat;
 
             return (
               <View
-                key={stat}
+                key={statId}
                 style={{
                   paddingVertical: 8,
                   borderTopWidth: 1,
                 }}
               >
-                <Text style={{ fontWeight: '700' }}>{label}</Text>
+                <Text style={{ fontWeight: '700' }}>{getStatName(key)}</Text>
                 <Text>
-                  {beforeValue} → {afterValue} {delta > 0 ? `( +${delta} )` : `(${delta})`}
+                  {beforeValue} to {afterValue} {delta > 0 ? `(+${delta})` : `(${delta})`}
                 </Text>
               </View>
             );
@@ -111,9 +104,9 @@ export default function RitualResultScreen() {
       >
         <Text style={{ fontSize: 16, fontWeight: '700' }}>Current Totals</Text>
 
-        {Object.entries(result.after).map(([stat, value]) => (
-          <Text key={stat}>
-            {STAT_LABELS[stat] ?? stat}: {value}
+        {Object.entries(result.after).map(([statId, value]) => (
+          <Text key={statId}>
+            {getStatName(statId as keyof typeof result.after)}: {value}
           </Text>
         ))}
       </View>

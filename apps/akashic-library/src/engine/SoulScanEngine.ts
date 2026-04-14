@@ -1,12 +1,12 @@
-import { DEFAULT_STATS } from '../domain/stats';
-import type { ArchetypeId, StatBlock, StatId } from '../domain/types';
+import { ARCHETYPES } from '../domain/archetypes';
+import { DEFAULT_STATS, STAT_IDS } from '../domain/stats';
+import { FIRST_ROOM_ID } from '../domain/rooms';
+import type { ArchetypeId, RoomId, StatBlock, StatId } from '../domain/types';
 
 export type SoulScanOption = {
   id: string;
   label: string;
-  // influences archetype selection
   archetypeWeights: Partial<Record<ArchetypeId, number>>;
-  // influences starting stats
   statDeltas: Partial<Record<StatId, number>>;
 };
 
@@ -19,170 +19,177 @@ export type SoulScanQuestion = {
 export const SOUL_SCAN_QUESTIONS: readonly SoulScanQuestion[] = [
   {
     id: 'q1',
-    prompt: 'When pressure rises, you tend to…',
+    prompt: 'When pressure rises, you tend to...',
     options: [
       {
         id: 'q1-a',
-        label: 'Hold the line and push through.',
-        archetypeWeights: { warden: 2 },
-        statDeltas: { will: 2, might: 1 },
+        label: 'Act directly and protect what matters.',
+        archetypeWeights: { warrior: 2 },
+        statDeltas: { courage: 2, discipline: 1 },
       },
       {
         id: 'q1-b',
-        label: 'Look for the pattern and the hidden lever.',
-        archetypeWeights: { scribe: 2 },
-        statDeltas: { insight: 2 },
+        label: 'Look for the pattern underneath the noise.',
+        archetypeWeights: { seer: 2 },
+        statDeltas: { clarity: 2 },
       },
       {
         id: 'q1-c',
-        label: 'Breathe, sense the current, and respond intuitively.',
-        archetypeWeights: { seer: 2 },
-        statDeltas: { attunement: 2 },
+        label: 'Find what can be transformed instead of forced.',
+        archetypeWeights: { alchemist: 2 },
+        statDeltas: { selfWorth: 1, compassion: 1 },
       },
     ],
   },
   {
     id: 'q2',
-    prompt: 'Your strength is most visible when you…',
+    prompt: 'Your strength is most visible when you...',
     options: [
       {
         id: 'q2-a',
-        label: 'Act decisively and protect what matters.',
-        archetypeWeights: { warden: 2 },
-        statDeltas: { might: 2, will: 1 },
+        label: 'Move first and make the path safer.',
+        archetypeWeights: { warrior: 2 },
+        statDeltas: { courage: 2 },
       },
       {
         id: 'q2-b',
-        label: 'Study, record, and make sense of complexity.',
-        archetypeWeights: { scribe: 2 },
-        statDeltas: { insight: 2 },
+        label: 'Notice what others have missed.',
+        archetypeWeights: { seer: 2 },
+        statDeltas: { clarity: 2, compassion: 1 },
       },
       {
         id: 'q2-c',
-        label: 'Notice subtle signals others miss.',
-        archetypeWeights: { seer: 2 },
-        statDeltas: { attunement: 2, insight: 1 },
+        label: 'Turn a difficult pattern into useful material.',
+        archetypeWeights: { alchemist: 2 },
+        statDeltas: { selfWorth: 2 },
       },
     ],
   },
   {
     id: 'q3',
-    prompt: 'In a new place, you instinctively…',
+    prompt: 'When you are blocked, the next honest step is...',
     options: [
       {
         id: 'q3-a',
-        label: 'Scan for risks and secure the perimeter.',
-        archetypeWeights: { warden: 2 },
-        statDeltas: { will: 1, agility: 1 },
+        label: 'Take the smallest brave action.',
+        archetypeWeights: { warrior: 2 },
+        statDeltas: { courage: 1, discipline: 1 },
       },
       {
         id: 'q3-b',
-        label: 'Map the layout and learn the rules.',
-        archetypeWeights: { scribe: 2 },
-        statDeltas: { insight: 2 },
+        label: 'Get clear about what is actually happening.',
+        archetypeWeights: { seer: 2 },
+        statDeltas: { clarity: 2 },
       },
       {
         id: 'q3-c',
-        label: 'Feel the atmosphere and follow the pull.',
-        archetypeWeights: { seer: 2 },
-        statDeltas: { attunement: 2 },
+        label: 'Change your relationship to the pattern.',
+        archetypeWeights: { alchemist: 2 },
+        statDeltas: { selfWorth: 1, compassion: 1 },
       },
     ],
   },
   {
     id: 'q4',
-    prompt: 'When you’re blocked, the fastest way forward is…',
+    prompt: 'Your inner compass is guided mostly by...',
     options: [
       {
         id: 'q4-a',
-        label: 'Discipline, repetition, endurance.',
-        archetypeWeights: { warden: 2 },
-        statDeltas: { will: 2 },
+        label: 'Courage and commitment.',
+        archetypeWeights: { warrior: 2 },
+        statDeltas: { courage: 1, discipline: 1 },
       },
       {
         id: 'q4-b',
-        label: 'Reframe the problem and change the approach.',
-        archetypeWeights: { scribe: 2 },
-        statDeltas: { insight: 2 },
+        label: 'Clarity and meaning.',
+        archetypeWeights: { seer: 2 },
+        statDeltas: { clarity: 1, compassion: 1 },
       },
       {
         id: 'q4-c',
-        label: 'Wait for the right moment and move fluidly.',
-        archetypeWeights: { seer: 2 },
-        statDeltas: { agility: 2, attunement: 1 },
+        label: 'Integration and self-trust.',
+        archetypeWeights: { alchemist: 2 },
+        statDeltas: { selfWorth: 2 },
       },
     ],
   },
   {
     id: 'q5',
-    prompt: 'Your inner compass is guided mostly by…',
+    prompt: 'The room you are ready to enter asks you to...',
     options: [
       {
         id: 'q5-a',
-        label: 'Duty and commitment.',
-        archetypeWeights: { warden: 2 },
-        statDeltas: { will: 1, might: 1 },
+        label: 'Face what you have avoided.',
+        archetypeWeights: { warrior: 1 },
+        statDeltas: { courage: 2 },
       },
       {
         id: 'q5-b',
-        label: 'Truth and clarity.',
-        archetypeWeights: { scribe: 2 },
-        statDeltas: { insight: 2 },
+        label: 'Listen for the repeated pattern.',
+        archetypeWeights: { seer: 1 },
+        statDeltas: { clarity: 2 },
       },
       {
         id: 'q5-c',
-        label: 'Meaning and intuition.',
-        archetypeWeights: { seer: 2 },
-        statDeltas: { attunement: 2 },
+        label: 'Release an old measure of worth.',
+        archetypeWeights: { alchemist: 1 },
+        statDeltas: { selfWorth: 2 },
       },
     ],
   },
 ];
 
-const clampStat = (value: number): number => Math.max(0, Math.min(10, value));
-
 export type SoulScanResult = {
   archetypeId: ArchetypeId;
   startingStats: StatBlock;
-  firstRoomId: 'hall_of_echoes'; // V1 fixed first room
+  firstRoomId: RoomId;
 };
+
+const clampStat = (value: number): number => Math.max(0, Math.min(10, value));
 
 export function runSoulScan(answerOptionIds: string[]): SoulScanResult {
   const archetypeScore: Record<ArchetypeId, number> = {
-    scribe: 0,
-    warden: 0,
+    warrior: 0,
     seer: 0,
+    alchemist: 0,
   };
 
   const stats: StatBlock = { ...DEFAULT_STATS };
-
   const selected = new Set(answerOptionIds);
 
-  for (const q of SOUL_SCAN_QUESTIONS) {
-    const option = q.options.find((o) => selected.has(o.id));
+  for (const question of SOUL_SCAN_QUESTIONS) {
+    const option = question.options.find((candidate) => selected.has(candidate.id));
     if (!option) continue;
 
-    for (const [a, w] of Object.entries(option.archetypeWeights)) {
-      archetypeScore[a as ArchetypeId] += w ?? 0;
+    for (const [archetypeId, weight] of Object.entries(option.archetypeWeights)) {
+      archetypeScore[archetypeId as ArchetypeId] += weight ?? 0;
     }
 
-    for (const [s, d] of Object.entries(option.statDeltas)) {
-      const statId = s as StatId;
-      stats[statId] = clampStat(stats[statId] + (d ?? 0));
+    for (const [statId, delta] of Object.entries(option.statDeltas)) {
+      const key = statId as StatId;
+      stats[key] = clampStat(stats[key] + (delta ?? 0));
     }
   }
 
-  // deterministic tie-break order
-  const archetypeOrder: ArchetypeId[] = ['scribe', 'warden', 'seer'];
-  let best: ArchetypeId = archetypeOrder[0];
+  const archetypeOrder = ARCHETYPES.map((archetype) => archetype.id);
+  let best = archetypeOrder[0];
 
-  for (const a of archetypeOrder) {
-    if (archetypeScore[a] > archetypeScore[best]) best = a;
+  for (const archetypeId of archetypeOrder) {
+    if (archetypeScore[archetypeId] > archetypeScore[best]) {
+      best = archetypeId;
+    }
+  }
+
+  const archetype = ARCHETYPES.find((candidate) => candidate.id === best);
+  const startingStats = { ...(archetype?.startingStats ?? DEFAULT_STATS) };
+
+  for (const statId of STAT_IDS) {
+    startingStats[statId] = clampStat(startingStats[statId] + stats[statId]);
   }
 
   return {
     archetypeId: best,
-    startingStats: stats,
-    firstRoomId: 'hall_of_echoes',
+    startingStats,
+    firstRoomId: FIRST_ROOM_ID,
   };
 }

@@ -2,39 +2,56 @@ import type { ArchetypeDefinition } from './types';
 
 export const ARCHETYPES: readonly ArchetypeDefinition[] = [
   {
-    id: 'scribe',
-    name: 'Scribe',
-    description: 'A knowledge-focused path with balanced utility.',
-    startingStats: {
-      might: 2,
-      insight: 4,
-      will: 3,
-      agility: 2,
-      attunement: 4,
+    id: 'warrior',
+    name: 'Warrior',
+    description: 'A path of direct action, boundaries, and courageous motion.',
+    statBias: {
+      courage: 2,
+      discipline: 1,
     },
-  },
-  {
-    id: 'warden',
-    name: 'Warden',
-    description: 'A protector path with strong frontline pressure.',
     startingStats: {
-      might: 4,
-      insight: 2,
-      will: 4,
-      agility: 2,
-      attunement: 2,
+      courage: 4,
+      clarity: 2,
+      compassion: 2,
+      discipline: 3,
+      selfWorth: 2,
     },
   },
   {
     id: 'seer',
     name: 'Seer',
-    description: 'A precision path that predicts and outmaneuvers.',
+    description: 'A path of pattern recognition, intuition, and inner listening.',
+    statBias: {
+      clarity: 2,
+      compassion: 1,
+    },
     startingStats: {
-      might: 2,
-      insight: 4,
-      will: 3,
-      agility: 4,
-      attunement: 2,
+      courage: 2,
+      clarity: 4,
+      compassion: 3,
+      discipline: 2,
+      selfWorth: 2,
+    },
+  },
+  {
+    id: 'alchemist',
+    name: 'Alchemist',
+    description: 'A path of transformation, self-trust, and integration.',
+    statBias: {
+      selfWorth: 2,
+      compassion: 1,
+    },
+    startingStats: {
+      courage: 2,
+      clarity: 2,
+      compassion: 3,
+      discipline: 2,
+      selfWorth: 4,
     },
   },
 ];
+
+export function getArchetypeById(id: ArchetypeDefinition['id'] | null): ArchetypeDefinition | null {
+  if (!id) return null;
+  return ARCHETYPES.find((archetype) => archetype.id === id) ?? null;
+}

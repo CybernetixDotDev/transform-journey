@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import type { RoomId } from '../../src/domain/types';
 import { RITUALS } from '../../src/domain/rituals';
+import { STATS, getStatName } from '../../src/domain/stats';
 import { usePlayerStore } from '../../src/state/usePlayerStore';
 
 export default function RitualScreen() {
@@ -11,11 +12,11 @@ export default function RitualScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const roomId = params.id as RoomId | undefined;
 
-  const player = usePlayerStore((s) => s.player);
-  const completeRitual = usePlayerStore((s) => s.completeRitual);
+  const player = usePlayerStore((state) => state.player);
+  const completeRitual = usePlayerStore((state) => state.completeRitual);
 
   const ritual = useMemo(
-    () => RITUALS.find((r) => r.roomId === roomId),
+    () => RITUALS.find((candidate) => candidate.roomId === roomId),
     [roomId]
   );
 
@@ -75,11 +76,11 @@ export default function RitualScreen() {
         }}
       >
         <Text style={{ fontSize: 16, fontWeight: '700' }}>Current Stats</Text>
-        <Text>Might: {player.stats.might}</Text>
-        <Text>Insight: {player.stats.insight}</Text>
-        <Text>Will: {player.stats.will}</Text>
-        <Text>Agility: {player.stats.agility}</Text>
-        <Text>Attunement: {player.stats.attunement}</Text>
+        {STATS.map((stat) => (
+          <Text key={stat.id}>
+            {stat.name}: {player.stats[stat.id]}
+          </Text>
+        ))}
       </View>
 
       <View style={{ gap: 10 }}>
@@ -107,7 +108,7 @@ export default function RitualScreen() {
                 <Text style={{ fontWeight: '600' }}>Effects</Text>
                 {Object.entries(choice.effects).map(([statId, delta]) => (
                   <Text key={statId}>
-                    {statId}: +{delta}
+                    {getStatName(statId as keyof typeof choice.effects)}: +{delta}
                   </Text>
                 ))}
               </View>

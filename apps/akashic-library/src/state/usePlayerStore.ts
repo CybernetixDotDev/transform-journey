@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
-import { DEFAULT_STATS } from '../domain/stats';
-
+import { DEFAULT_STATS, STAT_IDS } from '../domain/stats';
+import { BOSSES } from '../domain/bosses';
 import type {
   ArchetypeId,
   BossId,
@@ -11,7 +11,14 @@ import type {
   StatBlock,
   StatId,
 } from '../domain/types';
+import type { SoulScanResult } from '../engine/SoulScanEngine';
+import { canChallengeBoss } from '../engine/BossEngine';
 import { completeRitual as resolveRitual } from '../engine/RitualEngine';
+import {
+  getUnlockedRoomAfterBoss,
+  unlockNextRoomAfterBoss,
+  unlockRoom as resolveUnlockRoom,
+} from '../engine/UnlockEngine';
 import {
   clearPlayerState,
   loadPlayerState,
@@ -19,7 +26,6 @@ import {
 } from '../storage/persistence';
 
 type CompleteRitualInput = Omit<RitualLogEntry, 'id' | 'completedAt'> & {
-  bossId?: BossId;
   effects?: Partial<StatBlock>;
 };
 
@@ -30,44 +36,48 @@ type RitualResult = {
   after: StatBlock;
 };
 
+export type BossResult = {
+  bossId: BossId;
+  roomId: RoomId;
+  rewardXP: number;
+  unlockedRoomId: RoomId | null;
+  completedAt: string;
+};
+
 type PlayerStore = {
   hydrated: boolean;
   player: PlayerState;
   lastRitualResult: RitualResult | null;
+  lastBossResult: BossResult | null;
 
   hydrate: () => Promise<void>;
   reset: () => Promise<void>;
 
+  completeSoulScan: (result: SoulScanResult) => void;
   setArchetype: (archetypeId: ArchetypeId, startingStats?: StatBlock) => void;
   addAscensionPoints: (amount: number) => void;
 
   unlockRoom: (roomId: RoomId) => void;
-  defeatBoss: (bossId: BossId, rewardXP?: number) => void;
+  defeatBoss: (bossId: BossId, rewardXP?: number) => boolean;
 
   completeRitual: (entry: CompleteRitualInput) => void;
   setLastRitualResult: (result: RitualResult) => void;
   clearLastRitualResult: () => void;
+  clearLastBossResult: () => void;
 
   updateStat: (statId: StatId, delta: number) => void;
 };
 
 const clampStat = (value: number): number => Math.max(0, Math.min(10, value));
 
-const normalizeStatBlock = (stats: StatBlock): StatBlock => ({
-  might: clampStat(stats.might),
-  insight: clampStat(stats.insight),
-  will: clampStat(stats.will),
-  agility: clampStat(stats.agility),
-  attunement: clampStat(stats.attunement),
-});
-
-const copyStatBlock = (stats: StatBlock): StatBlock => ({
-  might: stats.might,
-  insight: stats.insight,
-  will: stats.will,
-  agility: stats.agility,
-  attunement: stats.attunement,
-});
+const copyStatBlock = (stats: Partial<StatBlock>): StatBlock =>
+  STAT_IDS.reduce(
+    (next, statId) => ({
+      ...next,
+      [statId]: clampStat(stats[statId] ?? 0),
+    }),
+    { ...DEFAULT_STATS }
+  );
 
 const safePositive = (value: number): number => {
   if (!Number.isFinite(value)) return 0;
@@ -76,7 +86,6 @@ const safePositive = (value: number): number => {
 
 const logPersistError = (err: unknown): void => {
   if (__DEV__) {
-    // eslint-disable-next-line no-console
     console.warn('Failed to persist player state', err);
   }
 };
@@ -105,6 +114,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
       const updated = update(state.player);
       const stamped: PlayerState = {
         ...updated,
+        stats: copyStatBlock(updated.stats),
         updatedAt: new Date().toISOString(),
       };
 
@@ -121,16 +131,17 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
     hydrated: false,
     player: createDefaultPlayerState(),
     lastRitualResult: null,
+    lastBossResult: null,
 
     hydrate: async () => {
       const loaded = await loadPlayerState();
-
-      const isValidV1 = loaded?.version === 1;
-      const player = isValidV1 ? loaded : createDefaultPlayerState();
+      const player = loaded
+        ? { ...loaded, stats: copyStatBlock(loaded.stats) }
+        : createDefaultPlayerState();
 
       set({ hydrated: true, player });
 
-      if (!loaded || !isValidV1) {
+      if (!loaded) {
         await savePlayerState(player).catch(logPersistError);
       }
     },
@@ -141,14 +152,27 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
       await clearPlayerState().catch(logPersistError);
       await savePlayerState(player).catch(logPersistError);
 
-      set({ hydrated: true, player, lastRitualResult: null });
+      set({ hydrated: true, player, lastRitualResult: null, lastBossResult: null });
+    },
+
+    completeSoulScan: (result) => {
+      persistMutation((player) =>
+        resolveUnlockRoom(
+          {
+            ...player,
+            archetypeId: result.archetypeId,
+            stats: copyStatBlock(result.startingStats),
+          },
+          result.firstRoomId
+        )
+      );
     },
 
     setArchetype: (archetypeId, startingStats) => {
       persistMutation((player) => ({
         ...player,
         archetypeId,
-        stats: normalizeStatBlock(startingStats ?? player.stats),
+        stats: copyStatBlock(startingStats ?? player.stats),
       }));
     },
 
@@ -157,35 +181,51 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 
       persistMutation((player) => ({
         ...player,
-        ascensionPoints: Math.max(0, player.ascensionPoints + safeAmount),
+        ascensionPoints: player.ascensionPoints + safeAmount,
       }));
     },
 
     unlockRoom: (roomId) => {
-      persistMutation((player) => {
-        if (player.unlockedRooms.includes(roomId)) return player;
-
-        return {
-          ...player,
-          unlockedRooms: [...player.unlockedRooms, roomId],
-        };
-      });
+      persistMutation((player) => resolveUnlockRoom(player, roomId));
     },
 
-    defeatBoss: (bossId, rewardXP = 0) => {
-      const safeReward = safePositive(rewardXP);
+    defeatBoss: (bossId, rewardXP) => {
+      let defeated = false;
+      let bossResult: BossResult | null = null;
 
       persistMutation((player) => {
-        const defeatedBosses = player.defeatedBosses.includes(bossId)
-          ? player.defeatedBosses
-          : [...player.defeatedBosses, bossId];
+        const boss = BOSSES.find((candidate) => candidate.id === bossId);
+        if (!boss || !canChallengeBoss(player, boss.roomId, boss).ok) {
+          return player;
+        }
 
-        return {
+        const safeReward = safePositive(rewardXP ?? boss?.rewardXP ?? 0);
+        const completedAt = new Date().toISOString();
+        const defeatedPlayer: PlayerState = {
           ...player,
-          defeatedBosses,
-          ascensionPoints: Math.max(0, player.ascensionPoints + safeReward),
+          defeatedBosses: [...player.defeatedBosses, bossId],
+          ascensionPoints: player.ascensionPoints + safeReward,
         };
+
+        const nextPlayer = unlockNextRoomAfterBoss(defeatedPlayer, boss.roomId);
+
+        defeated = true;
+        bossResult = {
+          bossId,
+          roomId: boss.roomId,
+          rewardXP: safeReward,
+          unlockedRoomId: getUnlockedRoomAfterBoss(player, nextPlayer),
+          completedAt,
+        };
+
+        return nextPlayer;
       });
+
+      if (bossResult) {
+        set({ lastBossResult: bossResult });
+      }
+
+      return defeated;
     },
 
     completeRitual: (entry) => {
@@ -213,6 +253,10 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 
     clearLastRitualResult: () => {
       set({ lastRitualResult: null });
+    },
+
+    clearLastBossResult: () => {
+      set({ lastBossResult: null });
     },
 
     updateStat: (statId, delta) => {

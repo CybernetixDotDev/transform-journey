@@ -2,26 +2,26 @@ import type { BossDefinition } from './types';
 
 export const BOSSES: readonly BossDefinition[] = [
   {
-    id: 'critic',
-    roomId: 'hall_of_echoes',
-    name: 'Orin',
-    title: 'The Critic',
-    description: 'A disciplined guardian enforcing forgotten entry rites.',
-    requiredStats: {
-      will: 4,
-      insight: 3,
-    },
-    rewardXP: 20,
-  },
-  {
     id: 'ghost',
     roomId: 'shadow_mirror_hall',
     name: 'Veyra',
     title: 'The Ghost',
-    description: 'A duelist that bends perception with reflected intent.',
+    description: 'A figure that asks whether you can look clearly and stay present.',
     requiredStats: {
-      insight: 4,
-      agility: 4,
+      courage: 3,
+      compassion: 2,
+    },
+    rewardXP: 20,
+  },
+  {
+    id: 'critic',
+    roomId: 'hall_of_echoes',
+    name: 'Orin',
+    title: 'The Critic',
+    description: 'A guardian of old standards and repeated inner verdicts.',
+    requiredStats: {
+      clarity: 4,
+      discipline: 2,
     },
     rewardXP: 30,
   },
@@ -30,11 +30,15 @@ export const BOSSES: readonly BossDefinition[] = [
     roomId: 'scarcity_vault',
     name: 'Thel',
     title: 'The Scarcity Beast',
-    description: 'A prophetic entity channeling sealed astral indexes.',
+    description: 'A keeper of narrowed futures and inherited lack.',
     requiredStats: {
-      attunement: 4,
-      will: 4,
+      selfWorth: 4,
+      discipline: 4,
     },
     rewardXP: 45,
   },
 ];
+
+export function getBossById(id: BossDefinition['id']): BossDefinition | null {
+  return BOSSES.find((boss) => boss.id === id) ?? null;
+}

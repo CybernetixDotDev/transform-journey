@@ -1,22 +1,25 @@
 import { useMemo } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import type { Href } from 'expo-router';
 
 import type { BossId } from '../../src/domain/types';
 import { BOSSES } from '../../src/domain/bosses';
+import { getStatName } from '../../src/domain/stats';
 import { usePlayerStore } from '../../src/state/usePlayerStore';
-import { canChallengeBoss, getNextRoomToUnlock } from '../../src/engine/BossEngine';
+import { canChallengeBoss } from '../../src/engine/BossEngine';
+
+const BOSS_RESULT_ROUTE = '/boss-result' as Href;
 
 export default function BossScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const bossId = params.id as BossId | undefined;
 
-  const player = usePlayerStore((s) => s.player);
-  const defeatBoss = usePlayerStore((s) => s.defeatBoss);
-  const unlockRoom = usePlayerStore((s) => s.unlockRoom);
+  const player = usePlayerStore((state) => state.player);
+  const defeatBoss = usePlayerStore((state) => state.defeatBoss);
 
-  const boss = useMemo(() => BOSSES.find((b) => b.id === bossId), [bossId]);
+  const boss = useMemo(() => BOSSES.find((candidate) => candidate.id === bossId), [bossId]);
 
   if (!bossId || !boss) {
     return (
@@ -44,23 +47,10 @@ export default function BossScreen() {
   const handleChallengeBoss = () => {
     if (!bossCheck.ok || bossDefeated) return;
 
-    defeatBoss(boss.id, boss.rewardXP);
-
-    const nextRoom = getNextRoomToUnlock(boss.roomId);
-    if (nextRoom) {
-      unlockRoom(nextRoom);
+    const defeated = defeatBoss(boss.id, boss.rewardXP);
+    if (defeated) {
+      router.replace(BOSS_RESULT_ROUTE);
     }
-
-    Alert.alert(
-      'Boss Defeated',
-      `${boss.title} — ${boss.name} has fallen. Your path opens forward.`,
-      [
-        {
-          text: 'Return to Map',
-          onPress: () => router.replace('/(tabs)/explore'),
-        },
-      ]
-    );
   };
 
   return (
@@ -80,19 +70,23 @@ export default function BossScreen() {
         <Text style={{ fontSize: 16, fontWeight: '700' }}>Required Stats</Text>
 
         {Object.entries(boss.requiredStats).length === 0 ? (
-          <Text style={{ opacity: 0.75 }}>—</Text>
+          <Text style={{ opacity: 0.75 }}>-</Text>
         ) : (
-          Object.entries(boss.requiredStats).map(([statId, required]) => (
-            <View
-              key={statId}
-              style={{ flexDirection: 'row', justifyContent: 'space-between' }}
-            >
-              <Text>{statId}</Text>
-              <Text>
-                {player.stats[statId as keyof typeof player.stats]} / {required}
-              </Text>
-            </View>
-          ))
+          Object.entries(boss.requiredStats).map(([statId, required]) => {
+            const key = statId as keyof typeof player.stats;
+
+            return (
+              <View
+                key={statId}
+                style={{ flexDirection: 'row', justifyContent: 'space-between' }}
+              >
+                <Text>{getStatName(key)}</Text>
+                <Text>
+                  {player.stats[key]} / {required}
+                </Text>
+              </View>
+            );
+          })
         )}
 
         <Text style={{ marginTop: 6 }}>Reward XP: {boss.rewardXP}</Text>
@@ -104,7 +98,7 @@ export default function BossScreen() {
           <Text style={{ fontWeight: '700' }}>You are not ready yet:</Text>
           {bossCheck.reasons.map((reason) => (
             <Text key={reason} style={{ opacity: 0.8 }}>
-              • {reason}
+              - {reason}
             </Text>
           ))}
         </View>

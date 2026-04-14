@@ -12,6 +12,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import type { RoomId } from '../../src/domain/types';
 import { ROOMS } from '../../src/domain/rooms';
 import { BOSSES } from '../../src/domain/bosses';
+import { getStatName } from '../../src/domain/stats';
 import { usePlayerStore } from '../../src/state/usePlayerStore';
 import { canChallengeBoss } from '../../src/engine/BossEngine';
 import { getRoomAsset, getBossAsset } from '../../src/assets';
@@ -157,7 +158,7 @@ export default function RoomScreen() {
               />
 
               <Text style={{ fontWeight: '600', color: '#fff' }}>
-                {boss.title} — {boss.name}
+                {boss.title} - {boss.name}
               </Text>
 
               <Text style={{ opacity: 0.88, color: '#fff', lineHeight: 21 }}>
@@ -175,7 +176,7 @@ export default function RoomScreen() {
               </Text>
 
               {Object.entries(boss.requiredStats).length === 0 ? (
-                <Text style={{ opacity: 0.75, color: '#fff' }}>—</Text>
+                <Text style={{ opacity: 0.75, color: '#fff' }}>-</Text>
               ) : (
                 Object.entries(boss.requiredStats).map(([statId, required]) => (
                   <View
@@ -185,7 +186,9 @@ export default function RoomScreen() {
                       justifyContent: 'space-between',
                     }}
                   >
-                    <Text style={{ color: '#fff' }}>{statId}</Text>
+                    <Text style={{ color: '#fff' }}>
+                      {getStatName(statId as keyof typeof player.stats)}
+                    </Text>
                     <Text style={{ color: '#fff' }}>
                       {player.stats[statId as keyof typeof player.stats]} / {required}
                     </Text>
@@ -272,7 +275,7 @@ export default function RoomScreen() {
                 </Text>
                 {bossCheck.reasons.map((r) => (
                   <Text key={r} style={{ opacity: 0.85, color: '#fff' }}>
-                    • {r}
+                    - {r}
                   </Text>
                 ))}
               </View>
